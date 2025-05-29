@@ -52,18 +52,17 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
-  const register = async (name, email, password) => {
+  const register = async (userData) => {
     try {
       setError(null);
       setLoading(true);
 
-      const response = await authAPI.register({ name, email, password });
-      const { token, user: userData } = response.data.data;
+      const response = await authAPI.register(userData);
+      const { token, user: userInfo } = response.data.data;
 
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(userData));
-      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userInfo));
+      setUser(userInfo);
 
       return { success: true };
     } catch (error) {

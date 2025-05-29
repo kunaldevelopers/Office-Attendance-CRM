@@ -8,12 +8,31 @@ const dotenv = require("dotenv");
 // Load environment variables
 dotenv.config();
 
+// Validate required environment variables
+const requiredEnvVars = ["MONGODB_URI", "JWT_SECRET", "WHATSAPP_PHONE_NUMBER"];
+
+const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  console.error(
+    `❌ Missing required environment variables: ${missingEnvVars.join(", ")}`
+  );
+  console.error(
+    "Please check your .env file and ensure all required variables are set."
+  );
+  process.exit(1);
+}
+
 // Import routes
 const authRoutes = require("./routes/auth");
 const whatsappRoutes = require("./routes/whatsapp");
+const adminRoutes = require("./routes/admin");
 
 // Import WhatsApp service
 const WhatsAppService = require("./services/whatsappService");
+
+// Import admin seeding function
+const seedAdmin = require("./utils/seedAdmin");
 
 const app = express();
 
@@ -26,15 +45,14 @@ app.use(express.urlencoded({ extended: true }));
 
 // Connect to MongoDB
 mongoose
-  .connect(
-    process.env.MONGODB_URI || "mongodb://localhost:27017/login-logout-app",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
     console.log("✅ Connected to MongoDB");
+    // Seed admin user after MongoDB connection
+    seedAdmin();
   })
   .catch((error) => {
     console.error("❌ MongoDB connection error:", error);
@@ -48,6 +66,7 @@ app.locals.whatsappService = whatsappService;
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {

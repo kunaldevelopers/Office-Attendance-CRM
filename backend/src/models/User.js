@@ -26,6 +26,65 @@ const userSchema = new mongoose.Schema(
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters long"],
     },
+    role: {
+      type: String,
+      enum: ["admin", "employee"],
+      default: "employee",
+    },
+    jobRole: {
+      type: String,
+      enum: [
+        "Developer",
+        "Sales Executive",
+        "Graphics Designer",
+        "Video Editor",
+        "Photo Editor",
+        "Cyber Security",
+        "WordPress Developer",
+      ],
+      required: function () {
+        return this.role === "employee";
+      },
+    },
+    gender: {
+      type: String,
+      enum: ["Male", "Female"],
+      required: true,
+    },
+    age: {
+      type: Number,
+      required: true,
+      min: [16, "Age must be at least 16"],
+      max: [65, "Age must be less than 65"],
+    },
+    dateOfBirth: {
+      type: Date,
+      required: true,
+    },
+    qualification: {
+      type: String,
+      enum: ["12th", "Diploma", "UG", "PG"],
+      required: true,
+    },
+    employmentType: {
+      type: String,
+      enum: ["Regular", "Intern"],
+      required: true,
+    },
+    callingNumber: {
+      type: String,
+      required: [true, "Calling number is required"],
+      match: [/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number"],
+    },
+    whatsappNumber: {
+      type: String,
+      required: [true, "WhatsApp number is required"],
+      match: [/^\+?[1-9]\d{1,14}$/, "Please enter a valid WhatsApp number"],
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,

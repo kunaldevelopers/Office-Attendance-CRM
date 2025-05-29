@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-const authMiddleware = async (req, res, next) => {
+const protect = async (req, res, next) => {
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "");
 
@@ -24,6 +24,16 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({
         error: {
           message: "Invalid token. User not found.",
+          status: 401,
+        },
+      });
+    }
+
+    // Check if user is active
+    if (!user.isActive) {
+      return res.status(401).json({
+        error: {
+          message: "Access denied. Account is deactivated.",
           status: 401,
         },
       });
@@ -59,4 +69,20 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-module.exports = authMiddleware;
+// Admin-only middleware
+const adminOnly = (req, res, next) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({
+      error: {
+        message: "Access denied. Admin privileges required.",
+        status: 403,
+      },
+    });
+  }
+  next();
+};
+
+// Backward compatibility
+const authMiddleware = protect;
+
+module.exports = { protect, adminOnly, authMiddleware };

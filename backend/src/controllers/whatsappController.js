@@ -10,8 +10,17 @@ exports.sendLoginMessage = async (req, res) => {
     const userName = req.user.name;
     const today = getTodayDate();
     const whatsappService = req.app.locals.whatsappService;
-    // Use the specific phone number instead of group ID
-    const phoneNumber = "+919142130225";
+    // Use the phone number from environment variable
+    const phoneNumber = process.env.WHATSAPP_PHONE_NUMBER;
+
+    if (!phoneNumber) {
+      return res.status(500).json({
+        error: {
+          message: "WhatsApp phone number not configured",
+          status: 500,
+        },
+      });
+    }
 
     if (!whatsappService.isReady()) {
       return res.status(503).json({
@@ -76,8 +85,17 @@ exports.sendLogoutMessage = async (req, res) => {
     const userName = req.user.name;
     const today = getTodayDate();
     const whatsappService = req.app.locals.whatsappService;
-    // Use the specific phone number instead of group ID
-    const phoneNumber = "+919142130225";
+    // Use the phone number from environment variable
+    const phoneNumber = process.env.WHATSAPP_PHONE_NUMBER;
+
+    if (!phoneNumber) {
+      return res.status(500).json({
+        error: {
+          message: "WhatsApp phone number not configured",
+          status: 500,
+        },
+      });
+    }
 
     if (!whatsappService.isReady()) {
       return res.status(503).json({

@@ -51,4 +51,47 @@ export const attendanceAPI = {
   getTodayStatus: () => api.get("/whatsapp/status"),
 };
 
+// Admin API calls
+export const adminAPI = {
+  // Dashboard stats
+  getDashboardStats: () => api.get("/admin/dashboard"),
+
+  // Staff management
+  getAllStaff: () => api.get("/admin/staff"),
+  addStaff: (staffData) => api.post("/admin/staff", staffData),
+  updateStaff: (staffId, staffData) =>
+    api.put(`/admin/staff/${staffId}`, staffData),
+  deleteStaff: (staffId) => api.delete(`/admin/staff/${staffId}`),
+  getStaffById: (staffId) => api.get(`/admin/staff/${staffId}`),
+
+  // Attendance reports
+  getAttendanceReports: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(
+      `/admin/attendance-reports${queryString ? `?${queryString}` : ""}`
+    );
+  },
+  downloadAttendanceReport: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(
+      `/admin/attendance-reports/download${
+        queryString ? `?${queryString}` : ""
+      }`,
+      {
+        responseType: "blob",
+      }
+    );
+  },
+
+  // Individual attendance reports
+  getUserAttendance: (userId, params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(
+      `/admin/attendance-reports/user/${userId}${
+        queryString ? `?${queryString}` : ""
+      }`
+    );
+  },
+};
+
 export default api;

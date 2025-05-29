@@ -1,4 +1,4 @@
-2025/05/29-14:13:02.974 55fc Reusing MANIFEST C:\Users\Kunal\Downloads\New folder (3)\backend\.wwebjs_auth\session-login-logout-bot\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/05/29-14:13:02.974 55fc Recovering log #223
-2025/05/29-14:13:02.999 55fc Reusing old log C:\Users\Kunal\Downloads\New folder (3)\backend\.wwebjs_auth\session-login-logout-bot\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000223.log 
-2025/05/29-14:13:07.549 146c Manual compaction at level-0 from '\x009\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00:\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/05/30-23:08:08.610 57b0 Reusing MANIFEST C:\Users\Kunal\Downloads\New folder (3)\backend\.wwebjs_auth\session-login-logout-bot\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/05/30-23:08:08.610 57b0 Recovering log #382
+2025/05/30-23:08:08.629 57b0 Reusing old log C:\Users\Kunal\Downloads\New folder (3)\backend\.wwebjs_auth\session-login-logout-bot\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000382.log 
+2025/05/30-23:08:12.953 2b28 Manual compaction at level-0 from '\x00V\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00W\x00\x00\x00' @ 0 : 0; will stop at (end)

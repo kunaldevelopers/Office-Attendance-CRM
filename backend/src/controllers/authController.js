@@ -3,7 +3,10 @@ const { validationResult } = require("express-validator");
 const User = require("../models/User");
 
 const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET || "fallback-secret", {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET environment variable is required");
+  }
+  return jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: "30d",
   });
 };
@@ -21,8 +24,19 @@ exports.signup = async (req, res) => {
         },
       });
     }
-
-    const { name, email, password } = req.body;
+    const {
+      name,
+      email,
+      password,
+      jobRole,
+      gender,
+      age,
+      dateOfBirth,
+      qualification,
+      employmentType,
+      callingNumber,
+      whatsappNumber,
+    } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -40,6 +54,15 @@ exports.signup = async (req, res) => {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password,
+      role: "employee", // All signups are employees by default
+      jobRole,
+      gender,
+      age,
+      dateOfBirth,
+      qualification,
+      employmentType,
+      callingNumber,
+      whatsappNumber,
     });
 
     await user.save();
