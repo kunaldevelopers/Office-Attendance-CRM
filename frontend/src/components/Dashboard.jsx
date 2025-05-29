@@ -1,14 +1,14 @@
 import React from "react";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import AdminDashboard from "./AdminDashboard";
 import EmployeeDashboard from "./EmployeeDashboard";
 
 const Dashboard = () => {
   const { user } = useAuth();
 
-  // Render appropriate dashboard based on user role
+  // Redirect admin users to the new admin routes
   if (user?.role === "admin") {
-    return <AdminDashboard />;
+    return <Navigate to="/admin/overview" replace />;
   }
 
   // Default to employee dashboard

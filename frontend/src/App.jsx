@@ -9,13 +9,14 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./hooks/useAuth";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./components/Dashboard";
+import AdminLayout from "./components/admin/AdminLayout";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import "./App.css";
 
 // Component to handle redirects based on auth status
 const AuthRedirect = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
     return (
@@ -28,7 +29,16 @@ const AuthRedirect = () => {
     );
   }
 
-  return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Redirect based on user role
+  if (user?.role === "admin") {
+    return <Navigate to="/admin/overview" replace />;
+  }
+
+  return <Navigate to="/dashboard" replace />;
 };
 
 function App() {
@@ -45,6 +55,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/*"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <AdminLayout />
                 </ProtectedRoute>
               }
             />
