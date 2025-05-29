@@ -1,16 +1,18 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { Eye, EyeOff, LogIn, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, LogIn, Mail, Lock, CheckCircle } from "lucide-react";
 
 const Login = () => {
   const { login, loading, error } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -21,10 +23,10 @@ const Login = () => {
     // Clear errors when user starts typing
     if (localError) setLocalError("");
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError("");
+    setSuccessMessage("");
 
     // Basic validation
     if (!formData.email || !formData.password) {
@@ -36,9 +38,16 @@ const Login = () => {
       setLocalError("Please enter a valid email address");
       return;
     }
-
     const result = await login(formData.email, formData.password);
-    if (!result.success) {
+    if (result.success) {
+      setSuccessMessage("Login successful! Redirecting to dashboard...");
+      // Clear form
+      setFormData({ email: "", password: "" });
+      // Redirect to dashboard after 1 second
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1000);
+    } else {
       setLocalError(result.error);
     }
   };
@@ -86,7 +95,6 @@ const Login = () => {
                 />
               </div>
             </div>
-
             {/* Password Field */}
             <div>
               <label
@@ -121,15 +129,22 @@ const Login = () => {
                   )}
                 </button>
               </div>
-            </div>
-
+            </div>{" "}
             {/* Error Message */}
             {displayError && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                 <p className="text-red-800 text-sm">{displayError}</p>
               </div>
             )}
-
+            {/* Success Message */}
+            {successMessage && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <p className="text-green-800 text-sm">{successMessage}</p>
+                </div>
+              </div>
+            )}
             {/* Submit Button */}
             <button
               type="submit"

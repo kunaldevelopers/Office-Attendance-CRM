@@ -51,6 +51,13 @@ const Dashboard = () => {
     setTimeout(() => setMessage({ type: "", text: "" }), 5000);
   };
 
+  const handleAppLogout = () => {
+    showMessage("success", "Successfully logged out! Redirecting to login...");
+    setTimeout(() => {
+      logout();
+    }, 1500);
+  };
+
   const handleLogin = async () => {
     if (todayStatus.loginSent) {
       showMessage("warning", "You have already logged in today!");
@@ -66,10 +73,9 @@ const Dashboard = () => {
         loginSent: true,
         loginTime: loginTime.toISOString(),
       }));
-
       showMessage(
         "success",
-        `✅ Logged in at: ${loginTime.toLocaleTimeString()}`
+        `✅ Login recorded at ${loginTime.toLocaleTimeString()}! WhatsApp message sent to +919142130225.`
       );
     } catch (error) {
       const errorMessage =
@@ -95,10 +101,9 @@ const Dashboard = () => {
         logoutSent: true,
         logoutTime: logoutTime.toISOString(),
       }));
-
       showMessage(
         "success",
-        `✅ Logged out at: ${logoutTime.toLocaleTimeString()}`
+        `✅ Logout recorded at ${logoutTime.toLocaleTimeString()}! WhatsApp message sent to +919142130225.`
       );
     } catch (error) {
       const errorMessage =
@@ -143,9 +148,9 @@ const Dashboard = () => {
                 </h1>
                 <p className="text-sm text-gray-600">Attendance Dashboard</p>
               </div>
-            </div>
+            </div>{" "}
             <button
-              onClick={logout}
+              onClick={handleAppLogout}
               className="text-gray-500 hover:text-red-500 transition-colors"
               title="Logout"
             >

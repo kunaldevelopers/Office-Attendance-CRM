@@ -1,10 +1,19 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { Eye, EyeOff, UserPlus, Mail, Lock, User } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  UserPlus,
+  Mail,
+  Lock,
+  User,
+  CheckCircle,
+} from "lucide-react";
 
 const Register = () => {
   const { register, loading, error } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -14,6 +23,7 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [localError, setLocalError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -24,10 +34,10 @@ const Register = () => {
     // Clear errors when user starts typing
     if (localError) setLocalError("");
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError("");
+    setSuccessMessage("");
 
     // Basic validation
     if (
@@ -54,13 +64,22 @@ const Register = () => {
       setLocalError("Passwords do not match");
       return;
     }
-
     const result = await register(
       formData.name,
       formData.email,
       formData.password
     );
-    if (!result.success) {
+    if (result.success) {
+      setSuccessMessage(
+        "Account created successfully! Redirecting to dashboard..."
+      );
+      // Clear form
+      setFormData({ name: "", email: "", password: "", confirmPassword: "" });
+      // Redirect to dashboard after 1.5 seconds
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1500);
+    } else {
       setLocalError(result.error);
     }
   };
@@ -108,7 +127,6 @@ const Register = () => {
                 />
               </div>
             </div>
-
             {/* Email Field */}
             <div>
               <label
@@ -133,7 +151,6 @@ const Register = () => {
                 />
               </div>
             </div>
-
             {/* Password Field */}
             <div>
               <label
@@ -169,7 +186,6 @@ const Register = () => {
                 </button>
               </div>
             </div>
-
             {/* Confirm Password Field */}
             <div>
               <label
@@ -204,15 +220,22 @@ const Register = () => {
                   )}
                 </button>
               </div>
-            </div>
-
+            </div>{" "}
             {/* Error Message */}
             {displayError && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                 <p className="text-red-800 text-sm">{displayError}</p>
               </div>
             )}
-
+            {/* Success Message */}
+            {successMessage && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <p className="text-green-800 text-sm">{successMessage}</p>
+                </div>
+              </div>
+            )}
             {/* Submit Button */}
             <button
               type="submit"
