@@ -86,7 +86,6 @@ class WhatsAppService {
       throw error;
     }
   }
-
   formatLoginMessage(userName) {
     const now = new Date();
     const time = now.toLocaleTimeString("en-US", {
@@ -100,9 +99,8 @@ class WhatsAppService {
       year: "numeric",
     });
 
-    return `✅ ${userName} login kiya\n🕒 ${time}\n📅 ${date}`;
+    return `👤 ${userName}\n✅ Logged in at: ${time}\n📅 Date: ${date}`;
   }
-
   formatLogoutMessage(userName) {
     const now = new Date();
     const time = now.toLocaleTimeString("en-US", {
@@ -116,7 +114,7 @@ class WhatsAppService {
       year: "numeric",
     });
 
-    return `🚫 ${userName} logout kiya\n🕒 ${time}\n📅 ${date}`;
+    return `👤 ${userName}\n🚫 Logged out at: ${time}\n📅 Date: ${date}`;
   }
   async sendLoginMessage(target, userName) {
     const message = this.formatLoginMessage(userName);
