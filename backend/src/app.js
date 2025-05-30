@@ -9,7 +9,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 // Validate required environment variables
-const requiredEnvVars = ["MONGODB_URI", "JWT_SECRET", "WHATSAPP_PHONE_NUMBER"];
+const requiredEnvVars = ["MONGODB_URI", "JWT_SECRET", "WHATSAPP_GROUP_ID"];
 
 const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
 
@@ -70,10 +70,26 @@ app.use("/api/admin", adminRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {
+  const whatsappStatus = whatsappService.getStatus();
   res.json({
     status: "OK",
     timestamp: new Date().toISOString(),
-    whatsappReady: whatsappService.isReady(),
+    services: {
+      server: "running",
+      database: "connected",
+      whatsapp: {
+        ready: whatsappStatus.ready,
+        initializing: whatsappStatus.initializing,
+        hasClient: whatsappStatus.hasClient,
+        status: whatsappStatus.ready
+          ? "connected"
+          : whatsappStatus.initializing
+          ? "initializing"
+          : "disconnected",
+      },
+    },
+    // Legacy field for backward compatibility
+    whatsappReady: whatsappStatus.ready,
   });
 });
 

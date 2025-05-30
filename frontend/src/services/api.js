@@ -55,6 +55,7 @@ export const attendanceAPI = {
 export const adminAPI = {
   // Dashboard stats
   getDashboardStats: () => api.get("/admin/dashboard"),
+  getDashboardStatsByRole: () => api.get("/admin/dashboard/by-role"),
 
   // Staff management
   getAllStaff: () => api.get("/admin/staff"),

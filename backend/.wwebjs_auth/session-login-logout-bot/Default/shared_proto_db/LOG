@@ -1,3 +1,2 @@
-2025/05/30-00:24:14.237 5298 Reusing MANIFEST C:\Users\Kunal\Downloads\New folder (3)\backend\.wwebjs_auth\session-login-logout-bot\Default\shared_proto_db/MANIFEST-000001
-2025/05/30-00:24:14.252 5298 Recovering log #3
-2025/05/30-00:24:14.252 5298 Reusing old log C:\Users\Kunal\Downloads\New folder (3)\backend\.wwebjs_auth\session-login-logout-bot\Default\shared_proto_db/000003.log 
+2025/05/30-12:56:21.932 56e4 Creating DB C:\Users\Kunal\Downloads\office\update-login-logout\backend\.wwebjs_auth\session-login-logout-bot\Default\shared_proto_db since it was missing.
+2025/05/30-12:56:21.936 56e4 Reusing MANIFEST C:\Users\Kunal\Downloads\office\update-login-logout\backend\.wwebjs_auth\session-login-logout-bot\Default\shared_proto_db/MANIFEST-000001

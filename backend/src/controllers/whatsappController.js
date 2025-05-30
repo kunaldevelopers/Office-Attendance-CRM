@@ -10,13 +10,13 @@ exports.sendLoginMessage = async (req, res) => {
     const userName = req.user.name;
     const today = getTodayDate();
     const whatsappService = req.app.locals.whatsappService;
-    // Use the phone number from environment variable
-    const phoneNumber = process.env.WHATSAPP_PHONE_NUMBER;
+    // Use the group ID from environment variable
+    const groupId = process.env.WHATSAPP_GROUP_ID;
 
-    if (!phoneNumber) {
+    if (!groupId) {
       return res.status(500).json({
         error: {
-          message: "WhatsApp phone number not configured",
+          message: "WhatsApp group ID not configured",
           status: 500,
         },
       });
@@ -41,10 +41,8 @@ exports.sendLoginMessage = async (req, res) => {
           status: 409,
         },
       });
-    }
-
-    // Send WhatsApp message
-    await whatsappService.sendLoginMessage(phoneNumber, userName);
+    } // Send WhatsApp message
+    await whatsappService.sendLoginMessage(groupId, userName);
 
     // Update or create log entry
     if (log) {
@@ -85,13 +83,13 @@ exports.sendLogoutMessage = async (req, res) => {
     const userName = req.user.name;
     const today = getTodayDate();
     const whatsappService = req.app.locals.whatsappService;
-    // Use the phone number from environment variable
-    const phoneNumber = process.env.WHATSAPP_PHONE_NUMBER;
+    // Use the group ID from environment variable
+    const groupId = process.env.WHATSAPP_GROUP_ID;
 
-    if (!phoneNumber) {
+    if (!groupId) {
       return res.status(500).json({
         error: {
-          message: "WhatsApp phone number not configured",
+          message: "WhatsApp group ID not configured",
           status: 500,
         },
       });
@@ -116,10 +114,8 @@ exports.sendLogoutMessage = async (req, res) => {
           status: 409,
         },
       });
-    }
-
-    // Send WhatsApp message
-    await whatsappService.sendLogoutMessage(phoneNumber, userName);
+    } // Send WhatsApp message
+    await whatsappService.sendLogoutMessage(groupId, userName);
 
     // Update or create log entry
     if (log) {

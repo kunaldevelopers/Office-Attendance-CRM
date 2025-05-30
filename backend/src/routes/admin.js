@@ -106,5 +106,6 @@ router.get(
 
 // Dashboard routes
 router.get("/dashboard", adminController.getDashboardStats);
+router.get("/dashboard/by-role", adminController.getDashboardStatsByRole);
 
 module.exports = router;

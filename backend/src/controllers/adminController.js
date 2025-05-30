@@ -677,3 +677,150 @@ exports.getDashboardStats = async (req, res) => {
     });
   }
 };
+
+// Dashboard stats grouped by job roles
+exports.getDashboardStatsByRole = async (req, res) => {
+  try {
+    // Get today's date in YYYY-MM-DD format to match database
+    const today = new Date().toLocaleDateString("en-CA");
+    console.log("Getting dashboard stats by role for date:", today);
+
+    // Get all active employees grouped by job role
+    const employeesByRole = await User.aggregate([
+      {
+        $match: {
+          role: "employee",
+          isActive: true,
+        },
+      },
+      {
+        $group: {
+          _id: "$jobRole",
+          employees: {
+            $push: {
+              id: "$_id",
+              name: "$name",
+              email: "$email",
+              jobRole: "$jobRole",
+              gender: "$gender",
+              age: "$age",
+              qualification: "$qualification",
+              employmentType: "$employmentType",
+            },
+          },
+          totalCount: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]);
+
+    // Get today's attendance data
+    const todayAttendance = await Log.find({ date: today }).populate({
+      path: "userId",
+      match: { isActive: true },
+      select: "name email jobRole",
+    });
+
+    // Filter out logs where userId is null (inactive employees)
+    const activeAttendance = todayAttendance.filter((record) => record.userId);
+
+    // Process each job role
+    const roleStats = employeesByRole.map((roleGroup) => {
+      const jobRole = roleGroup._id;
+      const employees = roleGroup.employees;
+      const totalEmployees = roleGroup.totalCount;
+
+      // Get attendance for this role
+      const roleAttendance = activeAttendance.filter(
+        (record) => record.userId.jobRole === jobRole
+      );
+
+      const presentEmployees = [];
+      const absentEmployees = [];
+
+      // Categorize employees as present or absent
+      employees.forEach((employee) => {
+        const hasAttendance = roleAttendance.some(
+          (record) =>
+            record.userId._id.toString() === employee.id.toString() &&
+            record.loginTime
+        );
+
+        if (hasAttendance) {
+          const attendanceRecord = roleAttendance.find(
+            (record) => record.userId._id.toString() === employee.id.toString()
+          );
+          presentEmployees.push({
+            ...employee,
+            loginTime: attendanceRecord.loginTime,
+            logoutTime: attendanceRecord.logoutTime,
+          });
+        } else {
+          absentEmployees.push(employee);
+        }
+      });
+
+      const presentCount = presentEmployees.length;
+      const absentCount = absentEmployees.length;
+      const attendancePercentage =
+        totalEmployees > 0
+          ? Math.round((presentCount / totalEmployees) * 100)
+          : 0;
+
+      return {
+        jobRole,
+        totalEmployees,
+        presentToday: presentCount,
+        absentToday: absentCount,
+        attendancePercentage,
+        presentEmployees,
+        absentEmployees,
+      };
+    });
+
+    // Overall statistics
+    const totalEmployees = await User.countDocuments({
+      role: "employee",
+      isActive: true,
+    });
+
+    const totalPresentToday = activeAttendance.filter(
+      (record) => record.loginTime
+    ).length;
+
+    const totalAbsentToday = Math.max(0, totalEmployees - totalPresentToday);
+
+    const overallAttendancePercentage =
+      totalEmployees > 0
+        ? Math.round((totalPresentToday / totalEmployees) * 100)
+        : 0;
+
+    const response = {
+      overall: {
+        totalEmployees,
+        presentToday: totalPresentToday,
+        absentToday: totalAbsentToday,
+        averageAttendance: overallAttendancePercentage,
+      },
+      roleStats,
+    };
+
+    console.log("Dashboard stats by role:", response);
+
+    res.json({
+      success: true,
+      message: "Dashboard stats by role retrieved successfully",
+      data: response,
+    });
+  } catch (error) {
+    console.error("Get dashboard stats by role error:", error);
+    res.status(500).json({
+      error: {
+        message: "Failed to retrieve dashboard stats by role",
+        status: 500,
+      },
+    });
+  }
+};
