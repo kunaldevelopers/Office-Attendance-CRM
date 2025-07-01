@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { attendanceAPI } from "../services/api";
+import ProfessionalLayout from "./layout/ProfessionalLayout";
 import {
   LogIn,
   LogOut,
@@ -9,10 +10,12 @@ import {
   CheckCircle,
   XCircle,
   User,
+  Activity,
+  TrendingUp,
 } from "lucide-react";
 
 const EmployeeDashboard = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [todayStatus, setTodayStatus] = useState({
     loginSent: false,
@@ -51,13 +54,6 @@ const EmployeeDashboard = () => {
     setTimeout(() => setMessage({ type: "", text: "" }), 5000);
   };
 
-  const handleAppLogout = () => {
-    showMessage("success", "Successfully logged out! Redirecting to login...");
-    setTimeout(() => {
-      logout();
-    }, 1500);
-  };
-
   const handleLogin = async () => {
     if (todayStatus.loginSent) {
       showMessage("warning", "You have already logged in today!");
@@ -65,7 +61,7 @@ const EmployeeDashboard = () => {
     }
     setLoading(true);
     try {
-      await attendanceAPI.sendLoginMessage();
+      const response = await attendanceAPI.sendLoginMessage();
       const loginTime = new Date();
 
       setTodayStatus((prev) => ({
@@ -73,9 +69,16 @@ const EmployeeDashboard = () => {
         loginSent: true,
         loginTime: loginTime.toISOString(),
       }));
+
       showMessage(
         "success",
-        `✅ Login recorded at ${loginTime.toLocaleTimeString()}! WhatsApp message sent to +919142130225.`
+        `✅ Login recorded at ${loginTime.toLocaleTimeString()}! ${
+          response.data.data.whatsappSent
+            ? "WhatsApp message sent successfully."
+            : response.data.data.whatsappError
+            ? `WhatsApp failed: ${response.data.data.whatsappError}`
+            : "WhatsApp service unavailable."
+        }`
       );
     } catch (error) {
       const errorMessage =
@@ -93,7 +96,7 @@ const EmployeeDashboard = () => {
     }
     setLoading(true);
     try {
-      await attendanceAPI.sendLogoutMessage();
+      const response = await attendanceAPI.sendLogoutMessage();
       const logoutTime = new Date();
 
       setTodayStatus((prev) => ({
@@ -101,9 +104,16 @@ const EmployeeDashboard = () => {
         logoutSent: true,
         logoutTime: logoutTime.toISOString(),
       }));
+
       showMessage(
         "success",
-        `✅ Logout recorded at ${logoutTime.toLocaleTimeString()}! WhatsApp message sent to +919142130225.`
+        `✅ Logout recorded at ${logoutTime.toLocaleTimeString()}! ${
+          response.data.data.whatsappSent
+            ? "WhatsApp message sent successfully."
+            : response.data.data.whatsappError
+            ? `WhatsApp failed: ${response.data.data.whatsappError}`
+            : "WhatsApp service unavailable."
+        }`
       );
     } catch (error) {
       const errorMessage =
@@ -133,161 +143,297 @@ const EmployeeDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-md mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <div className="bg-blue-100 p-2 rounded-full">
-                <User className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-800">
-                  Welcome, {user?.name}
-                </h1>
-                <p className="text-sm text-gray-600">Attendance Dashboard</p>
-              </div>
-            </div>{" "}
-            <button
-              onClick={handleAppLogout}
-              className="text-gray-500 hover:text-red-500 transition-colors"
-              title="Logout"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Date and Time */}
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2 text-gray-700">
-              <Calendar className="w-4 h-4" />
-              <span className="text-sm font-medium">
-                {formatDate(currentTime)}
-              </span>
+    <ProfessionalLayout>
+      {/* Welcome Header */}
+      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-700 rounded-3xl p-8 mb-8 text-white shadow-2xl border border-indigo-300">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">
+                Welcome back, {user?.name}! 👋
+              </h1>
+              <p className="text-violet-100 text-lg font-medium">
+                Track your attendance and manage your schedule effortlessly
+              </p>
             </div>
-            <div className="flex items-center space-x-2 text-gray-700">
-              <Clock className="w-4 h-4" />
-              <span className="text-lg font-mono font-bold">
-                {currentTime.toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                  hour12: true,
-                })}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Status Display */}
-        {(todayStatus.loginTime || todayStatus.logoutTime) && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">
-              Today's Activity
-            </h2>
-            <div className="space-y-3">
-              {todayStatus.loginTime && (
-                <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <div>
-                    <p className="text-sm font-medium text-green-800">
-                      ✅ Logged in at: {formatTime(todayStatus.loginTime)}
-                    </p>
-                    <p className="text-xs text-green-600">
-                      {formatDate(new Date(todayStatus.loginTime))}
-                    </p>
-                  </div>
+            <div className="hidden md:block">
+              <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/20">
+                <Clock className="w-8 h-8 mx-auto mb-2" />
+                <div className="text-2xl font-mono font-bold">
+                  {currentTime.toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
                 </div>
-              )}
-              {todayStatus.logoutTime && (
-                <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm font-medium text-blue-800">
-                      ✅ Logged out at: {formatTime(todayStatus.logoutTime)}
-                    </p>
-                    <p className="text-xs text-blue-600">
-                      {formatDate(new Date(todayStatus.logoutTime))}
-                    </p>
-                  </div>
+                <div className="text-sm text-violet-100">
+                  {formatDate(currentTime)}
                 </div>
-              )}
+              </div>
             </div>
           </div>
-        )}
-
-        {/* Message Display */}
-        {message.text && (
-          <div
-            className={`rounded-lg p-4 mb-6 ${
-              message.type === "success"
-                ? "bg-green-100 text-green-800 border border-green-200"
-                : message.type === "error"
-                ? "bg-red-100 text-red-800 border border-red-200"
-                : "bg-yellow-100 text-yellow-800 border border-yellow-200"
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              {message.type === "success" ? (
-                <CheckCircle className="w-5 h-5" />
-              ) : (
-                <XCircle className="w-5 h-5" />
-              )}
-              <span className="font-medium">{message.text}</span>
-            </div>
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="space-y-4">
-          <button
-            onClick={handleLogin}
-            disabled={loading || todayStatus.loginSent}
-            className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-2xl font-bold text-lg transition-all duration-200 ${
-              todayStatus.loginSent
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-green-500 hover:bg-green-600 text-white shadow-lg hover:shadow-xl active:scale-95"
-            }`}
-          >
-            <LogIn className="w-6 h-6" />
-            <span>
-              {loading && !todayStatus.loginSent
-                ? "Sending..."
-                : todayStatus.loginSent
-                ? "Already Logged In"
-                : "Login"}
-            </span>
-          </button>
-
-          <button
-            onClick={handleLogout}
-            disabled={loading || todayStatus.logoutSent}
-            className={`w-full flex items-center justify-center space-x-3 py-4 px-6 rounded-2xl font-bold text-lg transition-all duration-200 ${
-              todayStatus.logoutSent
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-xl active:scale-95"
-            }`}
-          >
-            <LogOut className="w-6 h-6" />
-            <span>
-              {loading && !todayStatus.logoutSent
-                ? "Sending..."
-                : todayStatus.logoutSent
-                ? "Already Logged Out"
-                : "Logout"}
-            </span>
-          </button>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-xs text-gray-500">
-            Attendance messages will be sent to WhatsApp automatically
-          </p>
         </div>
       </div>
-    </div>
+
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Actions Panel */}
+        <div className="lg:col-span-2">
+          {/* Current Status Card */}
+          <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-8 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Today's Status
+              </h2>
+              <div className="flex items-center space-x-2 bg-gradient-to-r from-emerald-100 to-teal-100 px-4 py-2 rounded-full border border-emerald-200">
+                <Activity className="w-5 h-5 text-emerald-600" />
+                <span className="text-sm font-semibold text-emerald-800">
+                  Active
+                </span>
+              </div>
+            </div>
+
+            {/* Time Display for Mobile */}
+            <div className="md:hidden bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-4 mb-6 border border-gray-200">
+              <div className="flex items-center justify-center space-x-4">
+                <Clock className="w-6 h-6 text-indigo-600" />
+                <div className="text-center">
+                  <div className="text-2xl font-mono font-bold text-indigo-900">
+                    {currentTime.toLocaleTimeString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
+                  </div>
+                  <div className="text-sm text-indigo-700 font-medium">
+                    {formatDate(currentTime)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Login Button */}
+              <div
+                className={`rounded-2xl p-6 border-2 transition-all duration-300 ${
+                  todayStatus.loginSent
+                    ? "bg-emerald-50 border-emerald-300"
+                    : "bg-emerald-500 border-emerald-400 hover:bg-emerald-600 cursor-pointer"
+                }`}
+                onClick={
+                  !todayStatus.loginSent && !loading ? handleLogin : undefined
+                }
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div
+                    className={`p-3 rounded-xl ${
+                      todayStatus.loginSent ? "bg-emerald-200" : "bg-white/20"
+                    }`}
+                  >
+                    <LogIn
+                      className={`w-6 h-6 ${
+                        todayStatus.loginSent
+                          ? "text-emerald-700"
+                          : "text-white"
+                      }`}
+                    />
+                  </div>
+                  {todayStatus.loginSent && (
+                    <CheckCircle className="w-6 h-6 text-emerald-600" />
+                  )}
+                </div>
+                <h3
+                  className={`text-lg font-bold mb-2 ${
+                    todayStatus.loginSent ? "text-emerald-800" : "text-white"
+                  }`}
+                >
+                  {loading && !todayStatus.loginSent
+                    ? "Sending..."
+                    : "Logged In"}
+                </h3>
+                <p
+                  className={`text-sm ${
+                    todayStatus.loginSent
+                      ? "text-emerald-600"
+                      : "text-emerald-100"
+                  }`}
+                >
+                  {todayStatus.loginSent
+                    ? `Logged in at ${formatTime(todayStatus.loginTime)}`
+                    : "Mark your online presence for today"}
+                </p>
+              </div>
+
+              {/* Logout Button */}
+              <div
+                className={`rounded-2xl p-6 border-2 transition-all duration-300 ${
+                  todayStatus.logoutSent
+                    ? "bg-rose-50 border-rose-300"
+                    : "bg-rose-500 border-rose-400 hover:bg-rose-600 cursor-pointer"
+                }`}
+                onClick={
+                  !todayStatus.logoutSent && !loading ? handleLogout : undefined
+                }
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div
+                    className={`p-3 rounded-xl ${
+                      todayStatus.logoutSent ? "bg-rose-200" : "bg-white/20"
+                    }`}
+                  >
+                    <LogOut
+                      className={`w-6 h-6 ${
+                        todayStatus.logoutSent ? "text-rose-700" : "text-white"
+                      }`}
+                    />
+                  </div>
+                  {todayStatus.logoutSent && (
+                    <CheckCircle className="w-6 h-6 text-rose-600" />
+                  )}
+                </div>
+                <h3
+                  className={`text-lg font-bold mb-2 ${
+                    todayStatus.logoutSent ? "text-rose-800" : "text-white"
+                  }`}
+                >
+                  {loading && !todayStatus.logoutSent
+                    ? "Sending..."
+                    : "Logged Out"}
+                </h3>
+                <p
+                  className={`text-sm ${
+                    todayStatus.logoutSent ? "text-rose-600" : "text-rose-100"
+                  }`}
+                >
+                  {todayStatus.logoutSent
+                    ? `Logged out at ${formatTime(todayStatus.logoutTime)}`
+                    : "Mark your offline status for today"}
+                </p>
+              </div>
+            </div>
+
+            {/* Message Display */}
+            {message.text && (
+              <div
+                className={`mt-6 rounded-xl p-4 border-l-4 shadow-lg ${
+                  message.type === "success"
+                    ? "bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-800 border-l-emerald-500 border border-emerald-200"
+                    : message.type === "error"
+                    ? "bg-gradient-to-r from-rose-50 to-red-50 text-rose-800 border-l-rose-500 border border-rose-200"
+                    : "bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-800 border-l-amber-500 border border-amber-200"
+                }`}
+              >
+                <div className="flex items-start space-x-3">
+                  {message.type === "success" ? (
+                    <CheckCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <XCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  )}
+                  <div>
+                    <p className="font-semibold">{message.text}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Sidebar Information */}
+        <div className="space-y-6">
+          {/* Today's Summary */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              Today's Summary
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
+                <div className="flex items-center space-x-3">
+                  <Calendar className="w-5 h-5 text-indigo-600" />
+                  <span className="text-sm font-semibold text-indigo-800">
+                    Date
+                  </span>
+                </div>
+                <span className="text-sm font-bold text-indigo-900 bg-indigo-100 px-3 py-1 rounded-full">
+                  {currentTime.toLocaleDateString()}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
+                <div className="flex items-center space-x-3">
+                  <LogIn className="w-5 h-5 text-emerald-600" />
+                  <span className="text-sm font-semibold text-emerald-800">
+                    Logged In
+                  </span>
+                </div>
+                <span className="text-sm font-bold text-emerald-900 bg-emerald-100 px-3 py-1 rounded-full">
+                  {todayStatus.loginTime
+                    ? formatTime(todayStatus.loginTime)
+                    : "--:--"}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-rose-50 to-pink-50 rounded-xl border border-rose-200">
+                <div className="flex items-center space-x-3">
+                  <LogOut className="w-5 h-5 text-rose-600" />
+                  <span className="text-sm font-semibold text-rose-800">
+                    Logged Out
+                  </span>
+                </div>
+                <span className="text-sm font-bold text-rose-900 bg-rose-100 px-3 py-1 rounded-full">
+                  {todayStatus.logoutTime
+                    ? formatTime(todayStatus.logoutTime)
+                    : "--:--"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              Quick Stats
+            </h3>
+            <div className="space-y-4">
+              <div className="text-center p-5 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 rounded-xl border border-violet-200">
+                <TrendingUp className="w-8 h-8 text-violet-600 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-violet-900">98%</div>
+                <div className="text-sm font-semibold text-violet-700">
+                  Monthly Attendance
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-center p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
+                  <div className="text-lg font-bold text-emerald-900">22</div>
+                  <div className="text-xs font-semibold text-emerald-700">
+                    Present Days
+                  </div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-200">
+                  <div className="text-lg font-bold text-amber-900">1</div>
+                  <div className="text-xs font-semibold text-amber-700">
+                    Absent Days
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Information */}
+          <div className="bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 rounded-2xl p-6 border-2 border-cyan-200 shadow-lg">
+            <h3 className="text-lg font-bold text-cyan-900 mb-3 flex items-center">
+              <span className="text-2xl mr-2">📝</span>
+              Important Note
+            </h3>
+            <p className="text-sm text-cyan-800 leading-relaxed font-medium">
+              Your attendance is automatically tracked when you log in and log
+              out. WhatsApp notifications will be sent when the service is
+              available. Stay connected and manage your time efficiently!
+            </p>
+          </div>
+        </div>
+      </div>
+    </ProfessionalLayout>
   );
 };
 

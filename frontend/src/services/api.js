@@ -93,6 +93,16 @@ export const adminAPI = {
       }`
     );
   },
+
+  // WhatsApp management
+  getWhatsAppStatus: () => api.get("/admin/whatsapp/status"),
+  startWhatsAppService: () => api.post("/admin/whatsapp/start"),
+  stopWhatsAppService: () => api.post("/admin/whatsapp/stop"),
+  restartWhatsAppService: () => api.post("/admin/whatsapp/restart"),
+  forceRestartWhatsAppService: () => api.post("/admin/whatsapp/force-restart"),
+  disconnectWhatsApp: () => api.post("/admin/whatsapp/disconnect"),
+  getWhatsAppQR: () => api.get("/admin/whatsapp/qr"),
+  testWhatsAppMessage: (data) => api.post("/admin/whatsapp/test", data),
 };
 
 export default api;

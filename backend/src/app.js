@@ -9,7 +9,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 // Validate required environment variables
-const requiredEnvVars = ["MONGODB_URI", "JWT_SECRET", "WHATSAPP_GROUP_ID"];
+const requiredEnvVars = ["MONGODB_URI", "JWT_SECRET"];
 
 const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
 
@@ -21,6 +21,13 @@ if (missingEnvVars.length > 0) {
     "Please check your .env file and ensure all required variables are set."
   );
   process.exit(1);
+}
+
+// Warn about optional WhatsApp configuration
+if (!process.env.WHATSAPP_GROUP_ID) {
+  console.warn(
+    "⚠️  WHATSAPP_GROUP_ID not configured - WhatsApp features will be disabled"
+  );
 }
 
 // Import routes
@@ -59,9 +66,10 @@ mongoose
     process.exit(1);
   });
 
-// Initialize WhatsApp service
+// Initialize WhatsApp service (don't auto-start)
 const whatsappService = new WhatsAppService();
 app.locals.whatsappService = whatsappService;
+console.log("📱 WhatsApp service initialized (manual start required)");
 
 // Routes
 app.use("/api/auth", authRoutes);

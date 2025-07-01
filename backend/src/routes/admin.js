@@ -2,6 +2,7 @@ const express = require("express");
 const { body } = require("express-validator");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
+const whatsappAdminController = require("../controllers/whatsappAdminController");
 const { protect, adminOnly } = require("../middleware/auth");
 
 // Apply protection and admin-only middleware to all routes
@@ -107,5 +108,34 @@ router.get(
 // Dashboard routes
 router.get("/dashboard", adminController.getDashboardStats);
 router.get("/dashboard/by-role", adminController.getDashboardStatsByRole);
+
+// WhatsApp management routes
+router.get("/whatsapp/status", whatsappAdminController.getWhatsAppStatus);
+router.post("/whatsapp/start", whatsappAdminController.startWhatsAppService);
+router.post("/whatsapp/stop", whatsappAdminController.stopWhatsAppService);
+router.post(
+  "/whatsapp/restart",
+  whatsappAdminController.restartWhatsAppService
+);
+router.post(
+  "/whatsapp/force-restart",
+  whatsappAdminController.forceRestartWhatsAppService
+);
+router.post(
+  "/whatsapp/soft-recover",
+  whatsappAdminController.softRecoverWhatsAppService
+);
+router.post("/whatsapp/disconnect", whatsappAdminController.disconnectWhatsApp);
+router.get("/whatsapp/qr", whatsappAdminController.getQRCode);
+router.post(
+  "/whatsapp/test",
+  [
+    body("message")
+      .optional()
+      .isLength({ min: 1, max: 1000 })
+      .withMessage("Message must be between 1 and 1000 characters"),
+  ],
+  whatsappAdminController.testWhatsAppMessage
+);
 
 module.exports = router;
