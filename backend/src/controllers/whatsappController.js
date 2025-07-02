@@ -1,7 +1,12 @@
 const Log = require("../models/Log");
 
 const getTodayDate = () => {
-  return new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
+  // Use local timezone instead of UTC to get correct local date
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`; // YYYY-MM-DD format in local timezone
 };
 
 exports.sendLoginMessage = async (req, res) => {
@@ -173,7 +178,22 @@ exports.getTodayStatus = async (req, res) => {
     const userId = req.user._id;
     const today = getTodayDate();
 
+    // Debug logging to help track the date calculation
+    console.log(`📅 Today's date calculation:`, {
+      localTime: new Date().toString(),
+      utcTime: new Date().toISOString(),
+      calculatedDate: today,
+      userId: userId,
+    });
+
     const log = await Log.findOne({ userId, date: today });
+
+    console.log(`📊 Today's status for ${userId}:`, {
+      date: today,
+      hasLog: !!log,
+      loginTime: log?.loginTime,
+      logoutTime: log?.logoutTime,
+    });
 
     res.json({
       message: "Today status retrieved successfully",

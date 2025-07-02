@@ -1,19 +1,4 @@
-2025/07/01-22:37:39.906 3fc8 Reusing MANIFEST C:\Users\Kunal\Downloads\ui\Latest-Updated-Office-CRM\backend\.wwebjs_auth\session-login-logout-bot\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/07/01-22:37:39.906 3fc8 Recovering log #528
-2025/07/01-22:37:40.037 3fc8 Reusing old log C:\Users\Kunal\Downloads\ui\Latest-Updated-Office-CRM\backend\.wwebjs_auth\session-login-logout-bot\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000528.log 
-2025/07/01-22:37:41.084 ca8 Level-0 table #536: started
-2025/07/01-22:37:41.111 ca8 Level-0 table #536: 917457 bytes OK
-2025/07/01-22:37:41.112 ca8 Delete type=0 #528
-2025/07/01-22:37:41.114 ca8 Manual compaction at level-0 from '\x00n\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00o\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/07/01-22:37:43.153 1014 Compacting 1@1 + 4@2 files
-2025/07/01-22:37:43.292 1014 Generated table #537@1: 63359 keys, 2229588 bytes
-2025/07/01-22:37:43.407 1014 Generated table #538@1: 46067 keys, 2208097 bytes
-2025/07/01-22:37:43.466 1014 Generated table #539@1: 19788 keys, 2178422 bytes
-2025/07/01-22:37:43.568 1014 Generated table #540@1: 61755 keys, 1515689 bytes
-2025/07/01-22:37:43.568 1014 Compacted 1@1 + 4@2 files => 8131796 bytes
-2025/07/01-22:37:43.569 1014 compacted to: files[ 0 0 4 0 0 0 0 ]
-2025/07/01-22:37:43.569 1014 Delete type=2 #530
-2025/07/01-22:37:43.569 1014 Delete type=2 #531
-2025/07/01-22:37:43.569 1014 Delete type=2 #532
-2025/07/01-22:37:43.569 1014 Delete type=2 #533
-2025/07/01-22:37:43.569 1014 Delete type=2 #536
+2025/07/02-00:21:48.597 c0 Reusing MANIFEST C:\Users\Kunal\Downloads\ui\Latest-Updated-Office-CRM\backend\.wwebjs_auth\session-login-logout-bot\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/07/02-00:21:48.597 c0 Recovering log #548
+2025/07/02-00:21:48.636 c0 Reusing old log C:\Users\Kunal\Downloads\ui\Latest-Updated-Office-CRM\backend\.wwebjs_auth\session-login-logout-bot\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000548.log 
+2025/07/02-00:21:53.107 1ea4 Manual compaction at level-0 from '\x00p\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00q\x00\x00\x00' @ 0 : 0; will stop at (end)
