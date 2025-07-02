@@ -208,17 +208,42 @@ const AdminOverview = () => {
                           </p>
                         </div>
                         <div className="text-right ml-2">
-                          <div className="flex items-center text-xs text-green-600">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {employee.loginTime
-                              ? new Date(employee.loginTime).toLocaleTimeString(
-                                  "en-US",
-                                  {
+                          <div className="flex flex-col space-y-1">
+                            <div className="flex items-center text-xs text-green-600">
+                              <Clock className="h-3 w-3 mr-1" />
+                              <span className="font-medium">Login:</span>
+                              <span className="ml-1">
+                                {employee.loginTime
+                                  ? new Date(
+                                      employee.loginTime
+                                    ).toLocaleTimeString("en-US", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })
+                                  : "N/A"}
+                              </span>
+                            </div>
+                            {employee.logoutTime && (
+                              <div className="flex items-center text-xs text-orange-600">
+                                <Clock className="h-3 w-3 mr-1" />
+                                <span className="font-medium">Logout:</span>
+                                <span className="ml-1">
+                                  {new Date(
+                                    employee.logoutTime
+                                  ).toLocaleTimeString("en-US", {
                                     hour: "2-digit",
                                     minute: "2-digit",
-                                  }
-                                )
-                              : "N/A"}
+                                  })}
+                                </span>
+                              </div>
+                            )}
+                            {!employee.logoutTime && (
+                              <div className="flex items-center text-xs text-blue-600">
+                                <span className="font-medium">
+                                  Still working
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
