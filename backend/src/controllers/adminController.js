@@ -681,9 +681,10 @@ exports.getDashboardStats = async (req, res) => {
 // Dashboard stats grouped by job roles
 exports.getDashboardStatsByRole = async (req, res) => {
   try {
-    // Get today's date in YYYY-MM-DD format to match database
-    const today = new Date().toLocaleDateString("en-CA");
-    console.log("Getting dashboard stats by role for date:", today);
+    // Get date from query parameter or default to today
+    const { date } = req.query;
+    const selectedDate = date || new Date().toLocaleDateString("en-CA");
+    console.log("Getting dashboard stats by role for date:", selectedDate);
 
     // Get all active employees grouped by job role
     const employeesByRole = await User.aggregate([
@@ -716,15 +717,15 @@ exports.getDashboardStatsByRole = async (req, res) => {
       },
     ]);
 
-    // Get today's attendance data
-    const todayAttendance = await Log.find({ date: today }).populate({
+    // Get attendance data for selected date
+    const attendanceData = await Log.find({ date: selectedDate }).populate({
       path: "userId",
       match: { isActive: true },
       select: "name email jobRole",
     });
 
     // Filter out logs where userId is null (inactive employees)
-    const activeAttendance = todayAttendance.filter((record) => record.userId);
+    const activeAttendance = attendanceData.filter((record) => record.userId);
 
     // Process each job role
     const roleStats = employeesByRole.map((roleGroup) => {
@@ -805,9 +806,10 @@ exports.getDashboardStatsByRole = async (req, res) => {
         averageAttendance: overallAttendancePercentage,
       },
       roleStats,
+      selectedDate, // Include selected date in response
     };
 
-    console.log("Dashboard stats by role:", response);
+    console.log("Dashboard stats by role for", selectedDate, ":", response);
 
     res.json({
       success: true,

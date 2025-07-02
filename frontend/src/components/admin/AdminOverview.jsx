@@ -10,6 +10,8 @@ import {
   UserCheck,
   UserX,
   Clock,
+  CalendarDays,
+  RefreshCw,
 } from "lucide-react";
 import { adminAPI } from "../../services/api";
 
@@ -25,10 +27,20 @@ const AdminOverview = () => {
   });
   const [loading, setLoading] = useState(true);
   const [expandedRole, setExpandedRole] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    // Default to today's date
+    const today = new Date();
+    return today.toISOString().split("T")[0]; // YYYY-MM-DD format
+  });
 
   const fetchDashboardStatsByRole = useCallback(async () => {
     try {
-      const response = await adminAPI.getDashboardStatsByRole();
+      const params = {};
+      if (selectedDate) {
+        params.date = selectedDate;
+      }
+
+      const response = await adminAPI.getDashboardStatsByRole(params);
       if (response.data.success) {
         setDashboardData(response.data.data);
       } else {
@@ -55,7 +67,7 @@ const AdminOverview = () => {
         roleStats: [],
       });
     }
-  }, []);
+  }, [selectedDate]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,6 +83,28 @@ const AdminOverview = () => {
 
     fetchData();
   }, [fetchDashboardStatsByRole]);
+
+  const handleDateChange = (newDate) => {
+    setSelectedDate(newDate);
+  };
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    await fetchDashboardStatsByRole();
+    setLoading(false);
+  };
+
+  const formatDisplayDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const isToday = selectedDate === new Date().toISOString().split("T")[0];
 
   // Simple stat card component
   const StatCard = ({ title, value, icon, color }) => {
@@ -151,7 +185,11 @@ const AdminOverview = () => {
                 <div className="flex items-center space-x-2 mb-3">
                   <UserCheck className="h-4 w-4 text-green-600" />
                   <h4 className="font-medium text-gray-900 text-sm">
-                    Present Today ({roleData.presentEmployees.length})
+                    {isToday
+                      ? `Present Today (${roleData.presentEmployees.length})`
+                      : `Present on ${formatDisplayDate(selectedDate)} (${
+                          roleData.presentEmployees.length
+                        })`}
                   </h4>
                 </div>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -199,7 +237,9 @@ const AdminOverview = () => {
                 <div className="flex items-center space-x-2 mb-3">
                   <UserX className="h-4 w-4 text-red-600" />
                   <h4 className="font-medium text-gray-900 text-sm">
-                    Absent Today ({roleData.absentEmployees.length})
+                    {isToday
+                      ? `Absent Today (${roleData.absentEmployees.length})`
+                      : `Absent on Selected Date (${roleData.absentEmployees.length})`}
                   </h4>
                 </div>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -216,14 +256,18 @@ const AdminOverview = () => {
                           {employee.email}
                         </p>
                         <p className="text-xs text-red-600 mt-1">
-                          No check-in recorded
+                          {isToday
+                            ? "No check-in recorded today"
+                            : "No check-in recorded"}
                         </p>
                       </div>
                     </div>
                   ))}
                   {roleData.absentEmployees.length === 0 && (
                     <div className="text-center py-6 text-green-600 text-sm">
-                      All employees are present! 🎉
+                      {isToday
+                        ? "All employees are present today! 🎉"
+                        : "All employees were present on this date! 🎉"}
                     </div>
                   )}
                 </div>
@@ -248,12 +292,52 @@ const AdminOverview = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      {/* Page Header */}
-      <div className="border-b border-gray-200 pb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Admin Overview</h1>
-        <p className="mt-1 text-gray-600">
-          Monitor your organization's attendance and performance
-        </p>
+      {/* Page Header with Date Picker */}
+      <div className="border-b border-gray-200 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Admin Overview</h1>
+            <p className="mt-1 text-gray-600">
+              Monitor your organization's attendance and performance
+            </p>
+          </div>
+
+          {/* Date Controls */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex items-center space-x-2">
+              <CalendarDays className="h-5 w-5 text-gray-500" />
+              <span className="text-sm text-gray-600">
+                {formatDisplayDate(selectedDate)}
+                {isToday && (
+                  <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Today
+                  </span>
+                )}
+              </span>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => handleDateChange(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                max={new Date().toISOString().split("T")[0]} // Don't allow future dates
+              />
+
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-3 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors text-sm"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                />
+                <span>Refresh</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -265,19 +349,19 @@ const AdminOverview = () => {
           color="bg-blue-500"
         />
         <StatCard
-          title="Present Today"
+          title={isToday ? "Present Today" : "Present on Selected Date"}
           value={dashboardData.overall.presentToday}
           icon={CheckCircle}
           color="bg-green-500"
         />
         <StatCard
-          title="Absent Today"
+          title={isToday ? "Absent Today" : "Absent on Selected Date"}
           value={dashboardData.overall.absentToday}
           icon={AlertCircle}
           color="bg-red-500"
         />
         <StatCard
-          title="Average Attendance"
+          title="Attendance Rate"
           value={`${dashboardData.overall.averageAttendance}%`}
           icon={BarChart3}
           color="bg-indigo-500"
