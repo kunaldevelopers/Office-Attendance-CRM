@@ -14,6 +14,7 @@ import {
   Smartphone,
   Home,
   User,
+  CalendarDays,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -33,6 +34,11 @@ const ProfessionalHeader = ({ onMenuToggle }) => {
             name: "Attendance Reports",
             href: "/admin/attendance",
             icon: Calendar,
+          },
+          {
+            name: "Employees Monthwise",
+            href: "/admin/employees-monthwise",
+            icon: CalendarDays,
           },
           {
             name: "WhatsApp Integration",

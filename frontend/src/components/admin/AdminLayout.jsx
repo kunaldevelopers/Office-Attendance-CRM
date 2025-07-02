@@ -6,6 +6,8 @@ import StaffManagement from "./StaffManagement";
 import AttendanceReports from "./AttendanceReports";
 import AddEmployee from "./AddEmployee";
 import WhatsAppManagement from "./WhatsAppManagement";
+import EmployeesMonthwise from "./EmployeesMonthwise";
+import EmployeeMonthlyDetails from "./EmployeeMonthlyDetails";
 import Breadcrumb from "./Breadcrumb";
 
 const AdminLayout = () => {
@@ -25,6 +27,11 @@ const AdminLayout = () => {
           <Route path="/staff" element={<StaffManagement />} />
           <Route path="/add-employee" element={<AddEmployee />} />
           <Route path="/attendance" element={<AttendanceReports />} />
+          <Route path="/employees-monthwise" element={<EmployeesMonthwise />} />
+          <Route
+            path="/employees-monthwise/:employeeId"
+            element={<EmployeeMonthlyDetails />}
+          />
           <Route path="/whatsapp" element={<WhatsAppManagement />} />
           <Route path="/" element={<Navigate to="/admin/overview" replace />} />
         </Routes>

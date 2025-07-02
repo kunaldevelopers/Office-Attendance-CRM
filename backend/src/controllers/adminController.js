@@ -463,6 +463,7 @@ exports.getUserAttendance = async (req, res) => {
     const totalPages = Math.ceil(totalRecords / limit);
 
     res.json({
+      success: true,
       message: "User attendance retrieved successfully",
       data: {
         user: {

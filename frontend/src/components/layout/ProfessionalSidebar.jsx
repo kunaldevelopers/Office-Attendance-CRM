@@ -9,6 +9,7 @@ import {
   Smartphone,
   Shield,
   ChevronRight,
+  CalendarDays,
 } from "lucide-react";
 
 const ProfessionalSidebar = ({ isCollapsed }) => {
@@ -52,6 +53,13 @@ const ProfessionalSidebar = ({ isCollapsed }) => {
       icon: Calendar,
       current: location.pathname === "/admin/attendance",
       description: "Track attendance data",
+    },
+    {
+      name: "Employees Monthwise",
+      href: "/admin/employees-monthwise",
+      icon: CalendarDays,
+      current: location.pathname.startsWith("/admin/employees-monthwise"),
+      description: "Monthly employee reports",
     },
     {
       name: "WhatsApp Integration",

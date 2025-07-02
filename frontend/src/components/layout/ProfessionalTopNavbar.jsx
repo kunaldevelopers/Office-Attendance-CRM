@@ -1,6 +1,13 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Users, UserPlus, Calendar, BarChart3, Smartphone } from "lucide-react";
+import {
+  Users,
+  UserPlus,
+  Calendar,
+  BarChart3,
+  Smartphone,
+  CalendarDays,
+} from "lucide-react";
 
 const ProfessionalTopNavbar = () => {
   const location = useLocation();
@@ -29,6 +36,12 @@ const ProfessionalTopNavbar = () => {
       href: "/admin/attendance",
       icon: Calendar,
       current: location.pathname === "/admin/attendance",
+    },
+    {
+      name: "Employees Monthwise",
+      href: "/admin/employees-monthwise",
+      icon: CalendarDays,
+      current: location.pathname.startsWith("/admin/employees-monthwise"),
     },
     {
       name: "WhatsApp Integration",
