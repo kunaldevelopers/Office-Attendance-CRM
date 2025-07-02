@@ -34,6 +34,7 @@ if (!process.env.WHATSAPP_GROUP_ID) {
 const authRoutes = require("./routes/auth");
 const whatsappRoutes = require("./routes/whatsapp");
 const adminRoutes = require("./routes/admin");
+const employeeRoutes = require("./routes/employee");
 
 // Import WhatsApp service
 const WhatsAppService = require("./services/whatsappService");
@@ -75,6 +76,7 @@ console.log("📱 WhatsApp service initialized (manual start required)");
 app.use("/api/auth", authRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/employee", employeeRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {

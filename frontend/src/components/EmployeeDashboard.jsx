@@ -25,6 +25,14 @@ const EmployeeDashboard = () => {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+  const [monthlyStats, setMonthlyStats] = useState({
+    presentDays: 0,
+    absentDays: 0,
+    totalWorkingDays: 0,
+    attendancePercentage: 0,
+    totalHoursWorked: 0,
+    loading: true,
+  });
 
   // Update current time every second
   useEffect(() => {
@@ -48,6 +56,114 @@ const EmployeeDashboard = () => {
 
     fetchTodayStatus();
   }, []);
+
+  // Fetch monthly statistics
+  useEffect(() => {
+    const fetchMonthlyStats = async () => {
+      if (!user?._id) {
+        console.log("🚫 No user._id found:", user);
+        return;
+      }
+
+      try {
+        setMonthlyStats((prev) => ({ ...prev, loading: true }));
+
+        const currentDate = new Date();
+
+        // Use exact same date logic as admin EmployeeMonthlyDetails
+        const startDateObj = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth(),
+          1
+        );
+        const endDateObj = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth() + 1,
+          0
+        );
+
+        const startDate = `${startDateObj.getFullYear()}-${String(
+          startDateObj.getMonth() + 1
+        ).padStart(2, "0")}-${String(startDateObj.getDate()).padStart(2, "0")}`;
+        const endDate = `${endDateObj.getFullYear()}-${String(
+          endDateObj.getMonth() + 1
+        ).padStart(2, "0")}-${String(endDateObj.getDate()).padStart(2, "0")}`;
+
+        console.log("📅 EmployeeDashboard: Fetching monthly stats", {
+          userId: user._id,
+          userName: user.name,
+          dateRange: { startDate, endDate },
+        });
+
+        // Use employee API specifically for user's own data
+        const response = await fetch(
+          `/api/employee/attendance?startDate=${startDate}&endDate=${endDate}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        console.log("📊 Employee API Response:", {
+          success: data.success,
+          recordsCount: data.data?.records?.length || 0,
+          records: data.data?.records || [],
+        });
+
+        if (data.success && data.data && data.data.records) {
+          const records = data.data.records;
+
+          // Use exact same calculation logic as admin EmployeeMonthlyDetails
+          const totalDaysInMonth = endDateObj.getDate();
+          const presentDays = records.filter(
+            (record) => record.loginTime
+          ).length;
+          const absentDays = totalDaysInMonth - presentDays;
+
+          let totalHoursWorked = 0;
+          records.forEach((record) => {
+            if (record.loginTime && record.logoutTime) {
+              const loginTime = new Date(record.loginTime);
+              const logoutTime = new Date(record.logoutTime);
+              const hoursWorked = (logoutTime - loginTime) / (1000 * 60 * 60);
+              totalHoursWorked += hoursWorked;
+              console.log(
+                `📝 Record ${record.date}: ${hoursWorked.toFixed(2)} hours`
+              );
+            }
+          });
+
+          const attendancePercentage =
+            totalDaysInMonth > 0 ? (presentDays / totalDaysInMonth) * 100 : 0;
+
+          const calculatedStats = {
+            presentDays,
+            absentDays,
+            totalWorkingDays: totalDaysInMonth,
+            attendancePercentage: Math.round(attendancePercentage),
+            totalHoursWorked: Math.round(totalHoursWorked * 100) / 100,
+            loading: false,
+          };
+
+          console.log("📈 Calculated stats:", calculatedStats);
+
+          setMonthlyStats(calculatedStats);
+        } else {
+          console.log("❌ No attendance records found or API error");
+          setMonthlyStats((prev) => ({ ...prev, loading: false }));
+        }
+      } catch (error) {
+        console.error("Failed to fetch monthly stats:", error);
+        setMonthlyStats((prev) => ({ ...prev, loading: false }));
+      }
+    };
+
+    fetchMonthlyStats();
+  }, [user]);
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
@@ -396,7 +512,11 @@ const EmployeeDashboard = () => {
             <div className="space-y-4">
               <div className="text-center p-5 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 rounded-xl border border-violet-200">
                 <TrendingUp className="w-8 h-8 text-violet-600 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-violet-900">98%</div>
+                <div className="text-2xl font-bold text-violet-900">
+                  {monthlyStats.loading
+                    ? "..."
+                    : `${monthlyStats.attendancePercentage}%`}
+                </div>
                 <div className="text-sm font-semibold text-violet-700">
                   Monthly Attendance
                 </div>
@@ -404,16 +524,32 @@ const EmployeeDashboard = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="text-center p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
-                  <div className="text-lg font-bold text-emerald-900">22</div>
+                  <div className="text-lg font-bold text-emerald-900">
+                    {monthlyStats.loading ? "..." : monthlyStats.presentDays}
+                  </div>
                   <div className="text-xs font-semibold text-emerald-700">
                     Present Days
                   </div>
                 </div>
                 <div className="text-center p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-200">
-                  <div className="text-lg font-bold text-amber-900">1</div>
+                  <div className="text-lg font-bold text-amber-900">
+                    {monthlyStats.loading ? "..." : monthlyStats.absentDays}
+                  </div>
                   <div className="text-xs font-semibold text-amber-700">
                     Absent Days
                   </div>
+                </div>
+              </div>
+
+              <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                <Clock className="w-6 h-6 text-blue-600 mx-auto mb-1" />
+                <div className="text-lg font-bold text-blue-900">
+                  {monthlyStats.loading
+                    ? "..."
+                    : `${monthlyStats.totalHoursWorked}h`}
+                </div>
+                <div className="text-xs font-semibold text-blue-700">
+                  Total Working Hours
                 </div>
               </div>
             </div>

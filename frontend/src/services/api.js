@@ -51,6 +51,16 @@ export const attendanceAPI = {
   getTodayStatus: () => api.get("/whatsapp/status"),
 };
 
+// Employee API calls
+export const employeeAPI = {
+  getMyAttendance: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(
+      `/employee/attendance${queryString ? `?${queryString}` : ""}`
+    );
+  },
+};
+
 // Admin API calls
 export const adminAPI = {
   // Dashboard stats
