@@ -758,6 +758,15 @@ exports.getDashboardStatsByRole = async (req, res) => {
             ...employee,
             loginTime: attendanceRecord.loginTime,
             logoutTime: attendanceRecord.logoutTime,
+            // Break information
+            lunchBreakActive: attendanceRecord.activeLunchBreak || false,
+            miscBreakActive: attendanceRecord.activeMiscBreak || false,
+            totalLunchBreakDuration:
+              attendanceRecord.totalLunchBreakDuration || 0,
+            totalMiscBreakDuration:
+              attendanceRecord.totalMiscBreakDuration || 0,
+            lunchBreaks: attendanceRecord.lunchBreaks || [],
+            miscBreaks: attendanceRecord.miscBreaks || [],
           });
         } else {
           absentEmployees.push(employee);

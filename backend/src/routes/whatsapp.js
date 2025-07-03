@@ -12,4 +12,10 @@ router.post("/login", whatsappController.sendLoginMessage);
 router.post("/logout", whatsappController.sendLogoutMessage);
 router.get("/status", whatsappController.getTodayStatus);
 
+// Break management routes
+router.post("/lunch-break/start", whatsappController.startLunchBreak);
+router.post("/lunch-break/stop", whatsappController.stopLunchBreak);
+router.post("/misc-break/start", whatsappController.startMiscBreak);
+router.post("/misc-break/stop", whatsappController.stopMiscBreak);
+
 module.exports = router;

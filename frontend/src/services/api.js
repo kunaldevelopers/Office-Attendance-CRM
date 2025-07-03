@@ -49,6 +49,12 @@ export const attendanceAPI = {
   sendLoginMessage: () => api.post("/whatsapp/login"),
   sendLogoutMessage: () => api.post("/whatsapp/logout"),
   getTodayStatus: () => api.get("/whatsapp/status"),
+
+  // Break management
+  startLunchBreak: () => api.post("/whatsapp/lunch-break/start"),
+  stopLunchBreak: () => api.post("/whatsapp/lunch-break/stop"),
+  startMiscBreak: () => api.post("/whatsapp/misc-break/start"),
+  stopMiscBreak: () => api.post("/whatsapp/misc-break/stop"),
 };
 
 // Employee API calls

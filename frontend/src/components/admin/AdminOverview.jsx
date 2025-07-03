@@ -335,6 +335,118 @@ const AdminOverview = () => {
                                 </span>
                               </div>
                             )}
+                            {/* Break Information */}
+                            {(employee.lunchBreakActive ||
+                              employee.miscBreakActive ||
+                              (employee.lunchBreaks &&
+                                employee.lunchBreaks.length > 0) ||
+                              (employee.miscBreaks &&
+                                employee.miscBreaks.length > 0)) && (
+                              <div className="flex flex-col space-y-1 mt-2 pt-2 border-t border-gray-200">
+                                {employee.lunchBreakActive && (
+                                  <div className="flex items-center text-xs text-amber-600">
+                                    <span className="w-2 h-2 bg-amber-500 rounded-full mr-2"></span>
+                                    <span className="font-medium">
+                                      Lunch Break Active
+                                    </span>
+                                  </div>
+                                )}
+                                {employee.miscBreakActive && (
+                                  <div className="flex items-center text-xs text-purple-600">
+                                    <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                                    <span className="font-medium">
+                                      Break Active
+                                    </span>
+                                  </div>
+                                )}
+
+                                {/* Detailed Lunch Break Timings */}
+                                {employee.lunchBreaks &&
+                                  employee.lunchBreaks.length > 0 && (
+                                    <div className="mt-1">
+                                      <div className="text-xs font-medium text-amber-700 mb-1">
+                                        🍽️ Lunch Breaks (
+                                        {employee.lunchBreaks.length}):
+                                      </div>
+                                      {employee.lunchBreaks.map(
+                                        (breakItem, index) => (
+                                          <div
+                                            key={index}
+                                            className="text-xs text-amber-600 ml-2"
+                                          >
+                                            #{index + 1}:{" "}
+                                            {new Date(
+                                              breakItem.startTime
+                                            ).toLocaleTimeString("en-US", {
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })}{" "}
+                                            -{" "}
+                                            {breakItem.endTime
+                                              ? new Date(
+                                                  breakItem.endTime
+                                                ).toLocaleTimeString("en-US", {
+                                                  hour: "2-digit",
+                                                  minute: "2-digit",
+                                                })
+                                              : "Active"}
+                                            {breakItem.duration && (
+                                              <span className="ml-1 text-amber-500">
+                                                (
+                                                {Math.round(breakItem.duration)}
+                                                m)
+                                              </span>
+                                            )}
+                                          </div>
+                                        )
+                                      )}
+                                    </div>
+                                  )}
+
+                                {/* Detailed Misc Break Timings */}
+                                {employee.miscBreaks &&
+                                  employee.miscBreaks.length > 0 && (
+                                    <div className="mt-1">
+                                      <div className="text-xs font-medium text-purple-700 mb-1">
+                                        ⏸️ Misc Breaks (
+                                        {employee.miscBreaks.length}):
+                                      </div>
+                                      {employee.miscBreaks.map(
+                                        (breakItem, index) => (
+                                          <div
+                                            key={index}
+                                            className="text-xs text-purple-600 ml-2"
+                                          >
+                                            #{index + 1}:{" "}
+                                            {new Date(
+                                              breakItem.startTime
+                                            ).toLocaleTimeString("en-US", {
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })}{" "}
+                                            -{" "}
+                                            {breakItem.endTime
+                                              ? new Date(
+                                                  breakItem.endTime
+                                                ).toLocaleTimeString("en-US", {
+                                                  hour: "2-digit",
+                                                  minute: "2-digit",
+                                                })
+                                              : "Active"}
+                                            {breakItem.duration && (
+                                              <span className="ml-1 text-purple-500">
+                                                (
+                                                {Math.round(breakItem.duration)}
+                                                m)
+                                              </span>
+                                            )}
+                                          </div>
+                                        )
+                                      )}
+                                    </div>
+                                  )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

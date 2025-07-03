@@ -205,6 +205,13 @@ exports.getTodayStatus = async (req, res) => {
         logoutTime: log ? log.logoutTime : null,
         whatsappLoginSent: log ? log.loginMessageSent : false,
         whatsappLogoutSent: log ? log.logoutMessageSent : false,
+        // Break status
+        lunchBreakActive: log ? log.activeLunchBreak : false,
+        miscBreakActive: log ? log.activeMiscBreak : false,
+        lunchBreaks: log ? log.lunchBreaks : [],
+        miscBreaks: log ? log.miscBreaks : [],
+        totalLunchBreakDuration: log ? log.totalLunchBreakDuration : 0,
+        totalMiscBreakDuration: log ? log.totalMiscBreakDuration : 0,
       },
     });
   } catch (error) {
@@ -212,6 +219,243 @@ exports.getTodayStatus = async (req, res) => {
     res.status(500).json({
       error: {
         message: "Failed to get today status",
+        status: 500,
+      },
+    });
+  }
+};
+
+// Lunch Break Management
+exports.startLunchBreak = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const userName = req.user.name;
+    const today = getTodayDate();
+
+    // Find or create today's log
+    let log = await Log.findOne({ userId, date: today });
+    if (!log) {
+      log = new Log({
+        userId,
+        date: today,
+      });
+    }
+
+    // Check if lunch break is already active
+    if (log.activeLunchBreak) {
+      return res.status(409).json({
+        error: {
+          message: "Lunch break is already active",
+          status: 409,
+        },
+      });
+    }
+
+    // Start lunch break
+    const breakStartTime = new Date();
+    log.lunchBreaks.push({
+      startTime: breakStartTime,
+    });
+    log.activeLunchBreak = true;
+
+    await log.save();
+
+    res.json({
+      message: "Lunch break started successfully",
+      data: {
+        timestamp: breakStartTime,
+        action: "lunch_break_start",
+      },
+    });
+  } catch (error) {
+    console.error("Start lunch break error:", error);
+    res.status(500).json({
+      error: {
+        message: "Failed to start lunch break",
+        status: 500,
+      },
+    });
+  }
+};
+
+exports.stopLunchBreak = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const userName = req.user.name;
+    const today = getTodayDate();
+
+    // Find today's log
+    let log = await Log.findOne({ userId, date: today });
+    if (!log) {
+      return res.status(404).json({
+        error: {
+          message: "No log found for today",
+          status: 404,
+        },
+      });
+    }
+
+    // Check if lunch break is active
+    if (!log.activeLunchBreak) {
+      return res.status(409).json({
+        error: {
+          message: "No active lunch break to stop",
+          status: 409,
+        },
+      });
+    }
+
+    // Find the active lunch break and end it
+    const activeLunchBreak = log.lunchBreaks[log.lunchBreaks.length - 1];
+    if (activeLunchBreak && !activeLunchBreak.endTime) {
+      const breakEndTime = new Date();
+      activeLunchBreak.endTime = breakEndTime;
+
+      // Calculate duration in minutes
+      const duration = Math.round(
+        (breakEndTime - activeLunchBreak.startTime) / (1000 * 60)
+      );
+      activeLunchBreak.duration = duration;
+
+      // Update total lunch break duration
+      log.totalLunchBreakDuration =
+        (log.totalLunchBreakDuration || 0) + duration;
+    }
+
+    log.activeLunchBreak = false;
+    await log.save();
+
+    res.json({
+      message: "Lunch break ended successfully",
+      data: {
+        timestamp: new Date(),
+        action: "lunch_break_stop",
+        duration: activeLunchBreak.duration,
+      },
+    });
+  } catch (error) {
+    console.error("Stop lunch break error:", error);
+    res.status(500).json({
+      error: {
+        message: "Failed to stop lunch break",
+        status: 500,
+      },
+    });
+  }
+};
+
+// Miscellaneous Break Management
+exports.startMiscBreak = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const userName = req.user.name;
+    const today = getTodayDate();
+
+    // Find or create today's log
+    let log = await Log.findOne({ userId, date: today });
+    if (!log) {
+      log = new Log({
+        userId,
+        date: today,
+      });
+    }
+
+    // Check if misc break is already active
+    if (log.activeMiscBreak) {
+      return res.status(409).json({
+        error: {
+          message: "Miscellaneous break is already active",
+          status: 409,
+        },
+      });
+    }
+
+    // Start misc break
+    const breakStartTime = new Date();
+    log.miscBreaks.push({
+      startTime: breakStartTime,
+    });
+    log.activeMiscBreak = true;
+
+    await log.save();
+
+    res.json({
+      message: "Miscellaneous break started successfully",
+      data: {
+        timestamp: breakStartTime,
+        action: "misc_break_start",
+      },
+    });
+  } catch (error) {
+    console.error("Start misc break error:", error);
+    res.status(500).json({
+      error: {
+        message: "Failed to start miscellaneous break",
+        status: 500,
+      },
+    });
+  }
+};
+
+exports.stopMiscBreak = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const userName = req.user.name;
+    const today = getTodayDate();
+
+    // Find today's log
+    let log = await Log.findOne({ userId, date: today });
+    if (!log) {
+      return res.status(404).json({
+        error: {
+          message: "No log found for today",
+          status: 404,
+        },
+      });
+    }
+
+    // Check if misc break is active
+    if (!log.activeMiscBreak) {
+      return res.status(409).json({
+        error: {
+          message: "No active miscellaneous break to stop",
+          status: 409,
+        },
+      });
+    }
+
+    // Find the active misc break and end it
+    const activeMiscBreak = log.miscBreaks[log.miscBreaks.length - 1];
+    if (activeMiscBreak && !activeMiscBreak.endTime) {
+      const breakEndTime = new Date();
+      activeMiscBreak.endTime = breakEndTime;
+
+      // Calculate duration in minutes
+      const duration = Math.round(
+        (breakEndTime - activeMiscBreak.startTime) / (1000 * 60)
+      );
+      activeMiscBreak.duration = duration;
+
+      // Update total misc break duration
+      log.totalMiscBreakDuration = (log.totalMiscBreakDuration || 0) + duration;
+    }
+
+    log.activeMiscBreak = false;
+    await log.save();
+
+    res.json({
+      message: "Miscellaneous break ended successfully",
+      data: {
+        timestamp: new Date(),
+        action: "misc_break_stop",
+        duration: activeMiscBreak.duration,
+      },
+    });
+  } catch (error) {
+    console.error("Stop misc break error:", error);
+    res.status(500).json({
+      error: {
+        message: "Failed to stop miscellaneous break",
         status: 500,
       },
     });

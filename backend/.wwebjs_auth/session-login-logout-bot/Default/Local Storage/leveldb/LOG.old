@@ -1,6 +1,3 @@
-2025/07/03-00:22:06.470 4074 Reusing MANIFEST C:\Users\Kunal\Downloads\ui\Latest-Updated-Office-CRM\backend\.wwebjs_auth\session-login-logout-bot\Default\Local Storage\leveldb/MANIFEST-000001
-2025/07/03-00:22:06.489 4074 Recovering log #10
-2025/07/03-00:22:06.490 4074 Reusing old log C:\Users\Kunal\Downloads\ui\Latest-Updated-Office-CRM\backend\.wwebjs_auth\session-login-logout-bot\Default\Local Storage\leveldb/000010.log 
-2025/07/03-00:24:12.685 3248 Level-0 table #14: started
-2025/07/03-00:24:12.694 3248 Level-0 table #14: 15191 bytes OK
-2025/07/03-00:24:12.697 3248 Delete type=0 #10
+2025/07/03-10:31:46.454 4c54 Reusing MANIFEST C:\Users\Kunal\Downloads\ui\Latest-Updated-Office-CRM\backend\.wwebjs_auth\session-login-logout-bot\Default\Local Storage\leveldb/MANIFEST-000001
+2025/07/03-10:31:46.476 4c54 Recovering log #13
+2025/07/03-10:31:46.477 4c54 Reusing old log C:\Users\Kunal\Downloads\ui\Latest-Updated-Office-CRM\backend\.wwebjs_auth\session-login-logout-bot\Default\Local Storage\leveldb/000013.log 

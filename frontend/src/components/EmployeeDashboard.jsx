@@ -12,6 +12,10 @@ import {
   User,
   Activity,
   TrendingUp,
+  Coffee,
+  Pause,
+  Play,
+  Square,
 } from "lucide-react";
 
 const EmployeeDashboard = () => {
@@ -22,6 +26,12 @@ const EmployeeDashboard = () => {
     logoutSent: false,
     loginTime: null,
     logoutTime: null,
+    lunchBreakActive: false,
+    miscBreakActive: false,
+    lunchBreaks: [],
+    miscBreaks: [],
+    totalLunchBreakDuration: 0,
+    totalMiscBreakDuration: 0,
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -31,6 +41,9 @@ const EmployeeDashboard = () => {
     totalWorkingDays: 0,
     attendancePercentage: 0,
     totalHoursWorked: 0,
+    totalLunchBreakHours: 0,
+    totalMiscBreakHours: 0,
+    netWorkingHours: 0,
     loading: true,
   });
 
@@ -47,7 +60,19 @@ const EmployeeDashboard = () => {
     const fetchTodayStatus = async () => {
       try {
         const response = await attendanceAPI.getTodayStatus();
-        setTodayStatus(response.data.data);
+        const data = response.data.data;
+        setTodayStatus({
+          loginSent: data.loginSent,
+          logoutSent: data.logoutSent,
+          loginTime: data.loginTime,
+          logoutTime: data.logoutTime,
+          lunchBreakActive: data.lunchBreakActive,
+          miscBreakActive: data.miscBreakActive,
+          lunchBreaks: data.lunchBreaks || [],
+          miscBreaks: data.miscBreaks || [],
+          totalLunchBreakDuration: data.totalLunchBreakDuration || 0,
+          totalMiscBreakDuration: data.totalMiscBreakDuration || 0,
+        });
       } catch (error) {
         console.error("Failed to fetch today status:", error);
         showMessage("error", "Failed to load today's status");
@@ -125,6 +150,9 @@ const EmployeeDashboard = () => {
           const absentDays = totalDaysInMonth - presentDays;
 
           let totalHoursWorked = 0;
+          let totalLunchBreakHours = 0;
+          let totalMiscBreakHours = 0;
+
           records.forEach((record) => {
             if (record.loginTime && record.logoutTime) {
               const loginTime = new Date(record.loginTime);
@@ -135,7 +163,22 @@ const EmployeeDashboard = () => {
                 `📝 Record ${record.date}: ${hoursWorked.toFixed(2)} hours`
               );
             }
+
+            // Track lunch break hours for display (already included in working hours)
+            if (record.totalLunchBreakDuration) {
+              const lunchHours = record.totalLunchBreakDuration / 60; // Convert minutes to hours
+              totalLunchBreakHours += lunchHours;
+            }
+
+            // Calculate miscellaneous break hours (these are subtracted from working hours)
+            if (record.totalMiscBreakDuration) {
+              const miscHours = record.totalMiscBreakDuration / 60; // Convert minutes to hours
+              totalMiscBreakHours += miscHours;
+            }
           });
+
+          // Calculate net working hours: base hours - misc breaks (lunch already included in base hours)
+          const netWorkingHours = totalHoursWorked - totalMiscBreakHours;
 
           const attendancePercentage =
             totalDaysInMonth > 0 ? (presentDays / totalDaysInMonth) * 100 : 0;
@@ -146,6 +189,9 @@ const EmployeeDashboard = () => {
             totalWorkingDays: totalDaysInMonth,
             attendancePercentage: Math.round(attendancePercentage),
             totalHoursWorked: Math.round(totalHoursWorked * 100) / 100,
+            totalLunchBreakHours: Math.round(totalLunchBreakHours * 100) / 100,
+            totalMiscBreakHours: Math.round(totalMiscBreakHours * 100) / 100,
+            netWorkingHours: Math.round(netWorkingHours * 100) / 100,
             loading: false,
           };
 
@@ -240,6 +286,122 @@ const EmployeeDashboard = () => {
     }
   };
 
+  // Lunch Break Handlers
+  const handleLunchBreakStart = async () => {
+    if (todayStatus.lunchBreakActive) {
+      showMessage("warning", "Lunch break is already active!");
+      return;
+    }
+    setLoading(true);
+    try {
+      await attendanceAPI.startLunchBreak();
+      const breakTime = new Date();
+
+      setTodayStatus((prev) => ({
+        ...prev,
+        lunchBreakActive: true,
+      }));
+
+      showMessage(
+        "success",
+        `🍽️ Lunch break started at ${breakTime.toLocaleTimeString()}!`
+      );
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.error?.message || "Failed to start lunch break";
+      showMessage("error", errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLunchBreakStop = async () => {
+    if (!todayStatus.lunchBreakActive) {
+      showMessage("warning", "No active lunch break to stop!");
+      return;
+    }
+    setLoading(true);
+    try {
+      await attendanceAPI.stopLunchBreak();
+      const breakTime = new Date();
+
+      setTodayStatus((prev) => ({
+        ...prev,
+        lunchBreakActive: false,
+      }));
+
+      showMessage(
+        "success",
+        `🍽️ Lunch break ended at ${breakTime.toLocaleTimeString()}!`
+      );
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.error?.message || "Failed to stop lunch break";
+      showMessage("error", errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Miscellaneous Break Handlers
+  const handleMiscBreakStart = async () => {
+    if (todayStatus.miscBreakActive) {
+      showMessage("warning", "Miscellaneous break is already active!");
+      return;
+    }
+    setLoading(true);
+    try {
+      await attendanceAPI.startMiscBreak();
+      const breakTime = new Date();
+
+      setTodayStatus((prev) => ({
+        ...prev,
+        miscBreakActive: true,
+      }));
+
+      showMessage(
+        "success",
+        `⏸️ Miscellaneous break started at ${breakTime.toLocaleTimeString()}!`
+      );
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.error?.message ||
+        "Failed to start miscellaneous break";
+      showMessage("error", errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMiscBreakStop = async () => {
+    if (!todayStatus.miscBreakActive) {
+      showMessage("warning", "No active miscellaneous break to stop!");
+      return;
+    }
+    setLoading(true);
+    try {
+      await attendanceAPI.stopMiscBreak();
+      const breakTime = new Date();
+
+      setTodayStatus((prev) => ({
+        ...prev,
+        miscBreakActive: false,
+      }));
+
+      showMessage(
+        "success",
+        `⏸️ Miscellaneous break ended at ${breakTime.toLocaleTimeString()}!`
+      );
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.error?.message ||
+        "Failed to stop miscellaneous break";
+      showMessage("error", errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatTime = (timeString) => {
     if (!timeString) return null;
     return new Date(timeString).toLocaleTimeString("en-US", {
@@ -328,7 +490,7 @@ const EmployeeDashboard = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Login Button */}
               <div
                 className={`rounded-2xl p-6 border-2 transition-all duration-300 ${
@@ -426,6 +588,148 @@ const EmployeeDashboard = () => {
                     : "Mark your offline status for today"}
                 </p>
               </div>
+
+              {/* Lunch Break Button */}
+              <div
+                className={`rounded-2xl p-6 border-2 transition-all duration-300 ${
+                  todayStatus.lunchBreakActive
+                    ? "bg-orange-50 border-orange-300"
+                    : "bg-orange-500 border-orange-400 hover:bg-orange-600 cursor-pointer"
+                }`}
+                onClick={
+                  !loading
+                    ? todayStatus.lunchBreakActive
+                      ? handleLunchBreakStop
+                      : handleLunchBreakStart
+                    : undefined
+                }
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div
+                    className={`p-3 rounded-xl ${
+                      todayStatus.lunchBreakActive
+                        ? "bg-orange-200"
+                        : "bg-white/20"
+                    }`}
+                  >
+                    {todayStatus.lunchBreakActive ? (
+                      <Square
+                        className={`w-6 h-6 ${
+                          todayStatus.lunchBreakActive
+                            ? "text-orange-700"
+                            : "text-white"
+                        }`}
+                      />
+                    ) : (
+                      <Coffee
+                        className={`w-6 h-6 ${
+                          todayStatus.lunchBreakActive
+                            ? "text-orange-700"
+                            : "text-white"
+                        }`}
+                      />
+                    )}
+                  </div>
+                  {todayStatus.lunchBreakActive && (
+                    <Activity className="w-6 h-6 text-orange-600 animate-pulse" />
+                  )}
+                </div>
+                <h3
+                  className={`text-lg font-bold mb-2 ${
+                    todayStatus.lunchBreakActive
+                      ? "text-orange-800"
+                      : "text-white"
+                  }`}
+                >
+                  {loading
+                    ? "Processing..."
+                    : todayStatus.lunchBreakActive
+                    ? "Stop Lunch"
+                    : "Start Lunch"}
+                </h3>
+                <p
+                  className={`text-sm ${
+                    todayStatus.lunchBreakActive
+                      ? "text-orange-600"
+                      : "text-orange-100"
+                  }`}
+                >
+                  {todayStatus.lunchBreakActive
+                    ? `Started at ${formatTime(todayStatus.lunchBreakStart)}`
+                    : "Take your lunch break"}
+                </p>
+              </div>
+
+              {/* Miscellaneous Break Button */}
+              <div
+                className={`rounded-2xl p-6 border-2 transition-all duration-300 ${
+                  todayStatus.miscBreakActive
+                    ? "bg-purple-50 border-purple-300"
+                    : "bg-purple-500 border-purple-400 hover:bg-purple-600 cursor-pointer"
+                }`}
+                onClick={
+                  !loading
+                    ? todayStatus.miscBreakActive
+                      ? handleMiscBreakStop
+                      : handleMiscBreakStart
+                    : undefined
+                }
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div
+                    className={`p-3 rounded-xl ${
+                      todayStatus.miscBreakActive
+                        ? "bg-purple-200"
+                        : "bg-white/20"
+                    }`}
+                  >
+                    {todayStatus.miscBreakActive ? (
+                      <Square
+                        className={`w-6 h-6 ${
+                          todayStatus.miscBreakActive
+                            ? "text-purple-700"
+                            : "text-white"
+                        }`}
+                      />
+                    ) : (
+                      <Pause
+                        className={`w-6 h-6 ${
+                          todayStatus.miscBreakActive
+                            ? "text-purple-700"
+                            : "text-white"
+                        }`}
+                      />
+                    )}
+                  </div>
+                  {todayStatus.miscBreakActive && (
+                    <Activity className="w-6 h-6 text-purple-600 animate-pulse" />
+                  )}
+                </div>
+                <h3
+                  className={`text-lg font-bold mb-2 ${
+                    todayStatus.miscBreakActive
+                      ? "text-purple-800"
+                      : "text-white"
+                  }`}
+                >
+                  {loading
+                    ? "Processing..."
+                    : todayStatus.miscBreakActive
+                    ? "Stop Break"
+                    : "Start Break"}
+                </h3>
+                <p
+                  className={`text-sm ${
+                    todayStatus.miscBreakActive
+                      ? "text-purple-600"
+                      : "text-purple-100"
+                  }`}
+                >
+                  {todayStatus.miscBreakActive
+                    ? `Started at ${formatTime(todayStatus.miscBreakStart)}`
+                    : "Take a miscellaneous break"}
+                </p>
+              </div>
             </div>
 
             {/* Message Display */}
@@ -501,6 +805,49 @@ const EmployeeDashboard = () => {
                     : "--:--"}
                 </span>
               </div>
+
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl border border-orange-200">
+                <div className="flex items-center space-x-3">
+                  <Coffee className="w-5 h-5 text-orange-600" />
+                  <span className="text-sm font-semibold text-orange-800">
+                    Lunch Break
+                  </span>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-bold text-orange-900 bg-orange-100 px-3 py-1 rounded-full">
+                    {todayStatus.lunchBreakActive ? "Active" : "Not Active"}
+                  </div>
+                  <div className="text-xs text-orange-700 mt-1">
+                    {todayStatus.lunchBreaks &&
+                    todayStatus.lunchBreaks.length > 0
+                      ? `${todayStatus.lunchBreaks.length} break${
+                          todayStatus.lunchBreaks.length > 1 ? "s" : ""
+                        } today`
+                      : "No breaks today"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200">
+                <div className="flex items-center space-x-3">
+                  <Pause className="w-5 h-5 text-purple-600" />
+                  <span className="text-sm font-semibold text-purple-800">
+                    Misc Break
+                  </span>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-bold text-purple-900 bg-purple-100 px-3 py-1 rounded-full">
+                    {todayStatus.miscBreakActive ? "Active" : "Not Active"}
+                  </div>
+                  <div className="text-xs text-purple-700 mt-1">
+                    {todayStatus.miscBreaks && todayStatus.miscBreaks.length > 0
+                      ? `${todayStatus.miscBreaks.length} break${
+                          todayStatus.miscBreaks.length > 1 ? "s" : ""
+                        } today`
+                      : "No breaks today"}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -546,14 +893,161 @@ const EmployeeDashboard = () => {
                 <div className="text-lg font-bold text-blue-900">
                   {monthlyStats.loading
                     ? "..."
-                    : `${monthlyStats.totalHoursWorked}h`}
+                    : `${
+                        monthlyStats.netWorkingHours ||
+                        monthlyStats.totalHoursWorked
+                      }h`}
                 </div>
                 <div className="text-xs font-semibold text-blue-700">
-                  Total Working Hours
+                  Net Working Hours
+                </div>
+              </div>
+
+              {/* Break Statistics */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-center p-3 bg-gradient-to-br from-orange-50 to-red-50 rounded-xl border border-orange-200">
+                  <Coffee className="w-5 h-5 text-orange-600 mx-auto mb-1" />
+                  <div className="text-sm font-bold text-orange-900">
+                    {monthlyStats.loading
+                      ? "..."
+                      : `${monthlyStats.totalLunchBreakHours || 0}h`}
+                  </div>
+                  <div className="text-xs font-semibold text-orange-700">
+                    Lunch Hours
+                  </div>
+                </div>
+                <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                  <Pause className="w-5 h-5 text-purple-600 mx-auto mb-1" />
+                  <div className="text-sm font-bold text-purple-900">
+                    {monthlyStats.loading
+                      ? "..."
+                      : `${monthlyStats.totalMiscBreakHours || 0}h`}
+                  </div>
+                  <div className="text-xs font-semibold text-purple-700">
+                    Break Hours
+                  </div>
+                </div>
+              </div>
+
+              {/* Working Hours Breakdown */}
+              <div className="text-center p-4 bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl border border-slate-200">
+                <TrendingUp className="w-6 h-6 text-slate-600 mx-auto mb-2" />
+                <div className="space-y-1">
+                  <div className="text-xs text-slate-600">
+                    Base Hours:{" "}
+                    {monthlyStats.loading
+                      ? "..."
+                      : `${monthlyStats.totalHoursWorked}h`}
+                  </div>
+                  <div className="text-xs text-orange-600">
+                    (Lunch:{" "}
+                    {monthlyStats.loading
+                      ? "..."
+                      : `${monthlyStats.totalLunchBreakHours || 0}h included)`}
+                  </div>
+                  <div className="text-xs text-purple-600">
+                    - Breaks:{" "}
+                    {monthlyStats.loading
+                      ? "..."
+                      : `${monthlyStats.totalMiscBreakHours || 0}h`}
+                  </div>
+                  <div className="text-sm font-bold text-slate-900 border-t border-slate-300 pt-1">
+                    Net:{" "}
+                    {monthlyStats.loading
+                      ? "..."
+                      : `${
+                          monthlyStats.netWorkingHours ||
+                          monthlyStats.totalHoursWorked
+                        }h`}
+                  </div>
+                </div>
+                <div className="text-xs font-semibold text-slate-700 mt-1">
+                  Hours Breakdown
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Today's Break Details */}
+          {((todayStatus.lunchBreaks && todayStatus.lunchBreaks.length > 0) ||
+            (todayStatus.miscBreaks && todayStatus.miscBreaks.length > 0)) && (
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Today's Break Details
+              </h3>
+
+              {/* Lunch Breaks */}
+              {todayStatus.lunchBreaks &&
+                todayStatus.lunchBreaks.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-semibold text-orange-800 mb-2 flex items-center">
+                      <Coffee className="w-4 h-4 mr-2" />
+                      Lunch Breaks ({todayStatus.lunchBreaks.length})
+                    </h4>
+                    <div className="space-y-2">
+                      {todayStatus.lunchBreaks.map((breakItem, index) => (
+                        <div
+                          key={index}
+                          className="bg-orange-50 p-3 rounded-lg border border-orange-200"
+                        >
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-orange-700">
+                              Break #{index + 1}
+                            </span>
+                            <div className="text-orange-900">
+                              {formatTime(breakItem.startTime)} -{" "}
+                              {breakItem.endTime
+                                ? formatTime(breakItem.endTime)
+                                : "Active"}
+                              {breakItem.duration && (
+                                <span className="ml-2 text-xs text-orange-600">
+                                  ({Math.round(breakItem.duration)} min)
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              {/* Miscellaneous Breaks */}
+              {todayStatus.miscBreaks && todayStatus.miscBreaks.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-purple-800 mb-2 flex items-center">
+                    <Pause className="w-4 h-4 mr-2" />
+                    Miscellaneous Breaks ({todayStatus.miscBreaks.length})
+                  </h4>
+                  <div className="space-y-2">
+                    {todayStatus.miscBreaks.map((breakItem, index) => (
+                      <div
+                        key={index}
+                        className="bg-purple-50 p-3 rounded-lg border border-purple-200"
+                      >
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-purple-700">
+                            Break #{index + 1}
+                          </span>
+                          <div className="text-purple-900">
+                            {formatTime(breakItem.startTime)} -{" "}
+                            {breakItem.endTime
+                              ? formatTime(breakItem.endTime)
+                              : "Active"}
+                            {breakItem.duration && (
+                              <span className="ml-2 text-xs text-purple-600">
+                                ({Math.round(breakItem.duration)} min)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Information */}
           <div className="bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 rounded-2xl p-6 border-2 border-cyan-200 shadow-lg">

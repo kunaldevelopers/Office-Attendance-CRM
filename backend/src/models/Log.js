@@ -27,6 +27,58 @@ const logSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Lunch break tracking
+    lunchBreaks: [
+      {
+        startTime: {
+          type: Date,
+          required: true,
+        },
+        endTime: {
+          type: Date,
+          default: null,
+        },
+        duration: {
+          type: Number, // in minutes
+          default: 0,
+        },
+      },
+    ],
+    // Miscellaneous break tracking
+    miscBreaks: [
+      {
+        startTime: {
+          type: Date,
+          required: true,
+        },
+        endTime: {
+          type: Date,
+          default: null,
+        },
+        duration: {
+          type: Number, // in minutes
+          default: 0,
+        },
+      },
+    ],
+    // Current active break status
+    activeLunchBreak: {
+      type: Boolean,
+      default: false,
+    },
+    activeMiscBreak: {
+      type: Boolean,
+      default: false,
+    },
+    // Total break durations for the day (in minutes)
+    totalLunchBreakDuration: {
+      type: Number,
+      default: 0,
+    },
+    totalMiscBreakDuration: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
