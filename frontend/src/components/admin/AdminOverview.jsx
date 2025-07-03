@@ -27,11 +27,80 @@ const AdminOverview = () => {
   });
   const [loading, setLoading] = useState(true);
   const [expandedRole, setExpandedRole] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(() => {
-    // Default to today's date
+
+  // Always get current date - don't cache it (FIXED: Use local time, not UTC)
+  const getCurrentDate = () => {
     const today = new Date();
-    return today.toISOString().split("T")[0]; // YYYY-MM-DD format
-  });
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0"); // Month is 0-indexed
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`; // YYYY-MM-DD format using local time
+  };
+
+  // Force to always start with current date
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [isUserSelectedDate, setIsUserSelectedDate] = useState(false); // Track if user manually selected a date
+
+  // Initialize with current date immediately
+  useEffect(() => {
+    setSelectedDate(getCurrentDate());
+  }, []);
+
+  // Force update to current date on every render and set up auto-update
+  useEffect(() => {
+    const updateToToday = () => {
+      const todayString = getCurrentDate();
+      console.log(
+        "Checking if should update date. Current:",
+        todayString,
+        "Selected:",
+        selectedDate,
+        "User selected:",
+        isUserSelectedDate
+      );
+
+      // Only auto-update if user hasn't manually selected a different date
+      if (!isUserSelectedDate || selectedDate === todayString) {
+        setSelectedDate((prev) => {
+          if (prev !== todayString) {
+            console.log(
+              `Date automatically updated from ${prev} to ${todayString}`
+            );
+            return todayString;
+          }
+          return prev;
+        });
+      }
+    };
+
+    // Update immediately only if no user selection
+    if (!isUserSelectedDate) {
+      updateToToday();
+    }
+
+    // Set up interval to check for date changes at midnight (not every 5 seconds)
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const msUntilMidnight = tomorrow.getTime() - now.getTime();
+
+    const timeoutId = setTimeout(() => {
+      updateToToday();
+      // Then set up daily interval
+      const intervalId = setInterval(updateToToday, 24 * 60 * 60 * 1000);
+      return () => clearInterval(intervalId);
+    }, msUntilMidnight);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [selectedDate, isUserSelectedDate]);
+
+  // Additional effect to force current date
+  useEffect(() => {
+    setSelectedDate(getCurrentDate());
+  }, []);
 
   const fetchDashboardStatsByRole = useCallback(async () => {
     try {
@@ -86,10 +155,20 @@ const AdminOverview = () => {
 
   const handleDateChange = (newDate) => {
     setSelectedDate(newDate);
+    setIsUserSelectedDate(newDate !== getCurrentDate()); // Mark as user-selected if not today
+    console.log(
+      "User manually selected date:",
+      newDate,
+      "Is different from today:",
+      newDate !== getCurrentDate()
+    );
   };
 
   const handleRefresh = async () => {
     setLoading(true);
+    // Also update date to current date when refreshing
+    setSelectedDate(getCurrentDate());
+    setIsUserSelectedDate(false); // Reset user selection flag when refreshing to today
     await fetchDashboardStatsByRole();
     setLoading(false);
   };
@@ -104,7 +183,19 @@ const AdminOverview = () => {
     });
   };
 
-  const isToday = selectedDate === new Date().toISOString().split("T")[0];
+  // Always check against current date, not cached value
+  const currentDate = getCurrentDate();
+  const displayDate = selectedDate || currentDate; // Fallback to current date
+  const isToday = displayDate === currentDate;
+
+  // Debug logging to see what's happening
+  console.log("Date Status Check:", {
+    selectedDate,
+    currentDate,
+    displayDate,
+    isToday,
+    actualToday: new Date().toDateString(),
+  });
 
   // Simple stat card component
   const StatCard = ({ title, value, icon, color }) => {
@@ -332,7 +423,7 @@ const AdminOverview = () => {
             <div className="flex items-center space-x-2">
               <CalendarDays className="h-5 w-5 text-gray-500" />
               <span className="text-sm text-gray-600">
-                {formatDisplayDate(selectedDate)}
+                {formatDisplayDate(displayDate)}
                 {isToday && (
                   <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     Today
@@ -344,11 +435,24 @@ const AdminOverview = () => {
             <div className="flex items-center space-x-2">
               <input
                 type="date"
-                value={selectedDate}
+                value={displayDate}
                 onChange={(e) => handleDateChange(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                max={new Date().toISOString().split("T")[0]} // Don't allow future dates
+                max={getCurrentDate()} // Always use current date as max
               />
+
+              {!isToday && (
+                <button
+                  onClick={() => {
+                    setSelectedDate(getCurrentDate());
+                    setIsUserSelectedDate(false); // Reset flag when clicking "Today"
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors text-sm"
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  <span>Today</span>
+                </button>
+              )}
 
               <button
                 onClick={handleRefresh}

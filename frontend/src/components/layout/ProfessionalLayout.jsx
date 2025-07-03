@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import ProfessionalHeader from "./ProfessionalHeader";
+import EmployeeHeader from "./EmployeeHeader";
 import ProfessionalSidebar from "./ProfessionalSidebar";
 import ProfessionalTopNavbar from "./ProfessionalTopNavbar";
 import ProfessionalFooter from "./ProfessionalFooter";
@@ -42,7 +43,7 @@ const ProfessionalLayout = ({ children }) => {
   // For regular employees, show layout without sidebar
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <ProfessionalHeader />
+      <EmployeeHeader />
 
       <main className="flex-1">
         <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">{children}</div>
